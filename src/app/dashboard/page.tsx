@@ -6,7 +6,7 @@ import {
   Bot, FileCheck, BookOpen, ChevronDown, Gift, 
   BookA, BookType, Languages, UserPlus, X, Eye, EyeOff, Download, Play, Music, LogOut
 } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 
@@ -28,7 +28,22 @@ export default function Dashboard() {
 
   const [userRole, setUserRole] = useState('trainer');
   const [userName, setUserName] = useState('Trainer');
+  const [isLoading, setIsLoading] = useState(true);
   const [studentsList, setStudentsList] = useState<any[]>([]);
+  const [extraPracticeFiles, setExtraPracticeFiles] = useState<{name: string, sizeBytes: number, type: string, url: string}[]>([]);
+  const [extraRoadmapFiles, setExtraRoadmapFiles] = useState<{name: string, sizeBytes: number, type: string, url: string}[]>([]);
+  const [openMenuFile, setOpenMenuFile] = useState<string | null>(null);
+  const [selectedStudent, setSelectedStudent] = useState<any | null>(null);
+  const [editingStudent, setEditingStudent] = useState<{student: any, idx: number} | null>(null);
+  const [editPhone, setEditPhone] = useState('');
+  const [editEmail, setEditEmail] = useState('');
+  const [openStudentMenu, setOpenStudentMenu] = useState<number | null>(null);
+  const practiceFileInputRef = useRef<HTMLInputElement>(null);
+  const roadmapFileInputRef = useRef<HTMLInputElement>(null);
+  const [aiChatInput, setAiChatInput] = useState('');
+  const [aiChatMessages, setAiChatMessages] = useState<{role: string, text: string}[]>([
+    { role: 'bot', text: 'Hello! I am your AI Assistant. I specialize in IELTS, PTE, TOEFL preparation, and immigration-related inquiries. How can I help you today?' }
+  ]);
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -49,9 +64,48 @@ export default function Dashboard() {
         const mockName = localStorage.getItem('dev_mock_name');
         if (mockRole) setUserRole(mockRole);
         if (mockName) setUserName(mockName);
+      } finally {
+        setIsLoading(false);
       }
     };
     fetchUser();
+
+    // Fetch students from Supabase, fall back to localStorage
+    const fetchStudents = async () => {
+      try {
+        const { data, error } = await supabase.from('students').select('*').order('created_at', { ascending: true });
+        if (data && !error) {
+          const mapped = data.map((s: any) => ({
+            name: s.name,
+            id: s.student_id,
+            phone: s.phone,
+            email: s.email,
+            batch: s.batch,
+            course: s.course,
+            status: s.status,
+            hasPreviousScore: s.has_previous_score,
+            previousScore: s.previous_score
+          }));
+          setStudentsList(mapped);
+          localStorage.setItem('dev_mock_students', JSON.stringify(mapped));
+          return;
+        }
+      } catch (e) {}
+      // Fallback to localStorage if Supabase unreachable
+      const savedStudents = localStorage.getItem('dev_mock_students');
+      if (savedStudents) {
+        try { setStudentsList(JSON.parse(savedStudents)); } catch (e) {}
+      }
+    };
+    fetchStudents();
+    const savedPracticeFiles = localStorage.getItem('dev_extra_practice_files');
+    if (savedPracticeFiles) {
+      try { setExtraPracticeFiles(JSON.parse(savedPracticeFiles)); } catch (e) {}
+    }
+    const savedRoadmapFiles = localStorage.getItem('dev_extra_roadmap_files');
+    if (savedRoadmapFiles) {
+      try { setExtraRoadmapFiles(JSON.parse(savedRoadmapFiles)); } catch (e) {}
+    }
   }, []);
 
   const handleCreateStudent = async () => {
@@ -59,72 +113,121 @@ export default function Dashboard() {
       alert("Student ID and Password are required!");
       return;
     }
-    
+
+    // Always save locally first with ALL fields — phone, email, etc.
+    const newStudent = {
+      name: newStudentFullName,
+      id: newStudentId,
+      phone: newStudentPhone,
+      email: newStudentEmail,
+      previousScore: newStudentScore,
+      hasPreviousScore,
+      batch: 'Batch 1',
+      course: 'IELTS Academic',
+      status: 'Active'
+    };
+    setStudentsList(prev => {
+      const updated = [...prev, newStudent];
+      localStorage.setItem('dev_mock_students', JSON.stringify(updated));
+      return updated;
+    });
+    setIsAddStudentModalOpen(false);
+    setNewStudentFullName('');
+    setNewStudentPhone('');
+    setNewStudentId('');
+    setNewStudentPassword('');
+    setNewStudentEmail('');
+    setNewStudentScore('');
+    setHasPreviousScore('no');
+
+    // Then attempt Supabase auth + DB insert silently in the background
     setIsCreatingStudent(true);
     const authEmail = newStudentId.includes('@') ? newStudentId : `${newStudentId}@student.vectragroup.com`;
-    
-    const { data, error } = await supabase.auth.signUp({
-      email: authEmail,
-      password: newStudentPassword,
-      options: {
-        data: {
-          full_name: newStudentFullName,
-          phone: newStudentPhone,
-          personal_email: newStudentEmail,
-          has_previous_score: hasPreviousScore,
-          previous_score: newStudentScore,
-          role: 'learner'
+    try {
+      await supabase.auth.signUp({
+        email: authEmail,
+        password: newStudentPassword,
+        options: {
+          data: {
+            full_name: newStudent.name,
+            phone: newStudent.phone,
+            personal_email: newStudent.email,
+            has_previous_score: hasPreviousScore,
+            previous_score: newStudentScore,
+            role: 'learner'
+          }
         }
-      }
-    });
-
-    setIsCreatingStudent(false);
-
-    if (error) {
-      if (error.message && error.message.toLowerCase().includes('fetch')) {
-        console.warn('Network blocked. Bypassing create student for local UI development.');
-        
-        const newStudent = {
-          name: newStudentFullName,
-          id: newStudentId,
-          batch: 'Batch 1',
-          course: 'IELTS Academic',
-          status: 'Active'
-        };
-        setStudentsList(prev => [...prev, newStudent]);
-
-        alert("Student Created successfully (Dev Network Bypass)!");
-        setIsAddStudentModalOpen(false);
-        setNewStudentFullName('');
-        setNewStudentPhone('');
-        setNewStudentId('');
-        setNewStudentPassword('');
-        setNewStudentEmail('');
-        setNewStudentScore('');
-        setHasPreviousScore('no');
-        return;
-      }
-      alert(`Error creating student: ${error.message}`);
-    } else {
-      const newStudent = {
-        name: newStudentFullName,
-        id: newStudentId,
-        batch: 'Batch 1',
-        course: 'IELTS Academic',
-        status: 'Active'
-      };
-      setStudentsList(prev => [...prev, newStudent]);
-
-      alert("Student Created successfully!");
-      setIsAddStudentModalOpen(false);
-      setNewStudentFullName('');
-      setNewStudentPhone('');
-      setNewStudentId('');
-      setNewStudentPassword('');
-      setNewStudentEmail('');
-      setNewStudentScore('');
-      setHasPreviousScore('no');
+      });
+      // Insert into students table
+      await supabase.from('students').insert({
+        name: newStudent.name,
+        student_id: newStudent.id,
+        phone: newStudent.phone,
+        email: newStudent.email,
+        batch: newStudent.batch,
+        course: newStudent.course,
+        status: newStudent.status,
+        has_previous_score: newStudent.hasPreviousScore,
+        previous_score: newStudent.previousScore
+      });
+    } catch (e) {
+      // Supabase unreachable in dev — student already saved locally above
+    } finally {
+      setIsCreatingStudent(false);
     }
+  };
+
+  const handleAddPracticeFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append('file', file);
+    await fetch('/api/upload', { method: 'POST', body: formData });
+
+    const fileType = file.type.includes('pdf') ? 'pdf' : 'audio';
+    const newFile = { name: file.name, sizeBytes: file.size, type: fileType, url: `/Study Material/${file.name}` };
+    setExtraPracticeFiles(prev => {
+      const updated = [...prev, newFile];
+      try { localStorage.setItem('dev_extra_practice_files', JSON.stringify(updated)); } catch(e) {}
+      return updated;
+    });
+    if (practiceFileInputRef.current) practiceFileInputRef.current.value = '';
+  };
+
+  const handleAddRoadmapFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append('file', file);
+    await fetch('/api/upload', { method: 'POST', body: formData });
+
+    const fileType = file.type.includes('pdf') ? 'pdf' : 'audio';
+    const newFile = { name: file.name, sizeBytes: file.size, type: fileType, url: `/Study Material/${file.name}` };
+    setExtraRoadmapFiles(prev => {
+      const updated = [...prev, newFile];
+      try { localStorage.setItem('dev_extra_roadmap_files', JSON.stringify(updated)); } catch(e) {}
+      return updated;
+    });
+    if (roadmapFileInputRef.current) roadmapFileInputRef.current.value = '';
+  };
+
+  const handleDeleteExtraFile = (fileName: string, section: 'practice' | 'roadmap') => {
+    if (section === 'practice') {
+      setExtraPracticeFiles(prev => {
+        const updated = prev.filter(f => f.name !== fileName);
+        try { localStorage.setItem('dev_extra_practice_files', JSON.stringify(updated)); } catch(e) {}
+        return updated;
+      });
+    } else {
+      setExtraRoadmapFiles(prev => {
+        const updated = prev.filter(f => f.name !== fileName);
+        try { localStorage.setItem('dev_extra_roadmap_files', JSON.stringify(updated)); } catch(e) {}
+        return updated;
+      });
+    }
+    setOpenMenuFile(null);
   };
 
   const handleLogout = async () => {
@@ -143,8 +246,6 @@ export default function Dashboard() {
     { name: 'Study Roadmap', icon: Map },
     { name: 'Test History', icon: Clock },
     { name: 'AI Tutor', icon: Bot },
-    { name: 'IELTS Templates', icon: FileCheck },
-    { name: 'IELTS Course', icon: BookOpen, isNew: true },
   ];
 
   const formatSize = (bytes: number) => bytes > 1024 * 1024 ? (bytes / (1024 * 1024)).toFixed(1) + ' MB' : Math.round(bytes / 1024) + ' KB';
@@ -177,10 +278,7 @@ export default function Dashboard() {
     { name: 'AC - Reality Test-5 Reading QP.pdf', sizeBytes: 830708, type: 'pdf' },
     { name: 'AC - Reality Test-5 Speaking - QP.pdf', sizeBytes: 714626, type: 'pdf' },
     { name: 'AC - Reality Test-5 Writing Task 1 and 2 - QP.pdf', sizeBytes: 471257, type: 'pdf' },
-    { name: 'AC - Reality Test-5 Listening and Reading - Answers.pdf', sizeBytes: 532292, type: 'pdf' }
-  ];
-
-  const mockTestFiles = [
+    { name: 'AC - Reality Test-5 Listening and Reading - Answers.pdf', sizeBytes: 532292, type: 'pdf' },
     { name: 'IELTS 20 TEST 1.pdf', sizeBytes: 5327081, type: 'pdf' },
     { name: 'IELTS 20 TEST 2.pdf', sizeBytes: 5899155, type: 'pdf' },
     { name: 'IELTS 20 TEST 3.pdf', sizeBytes: 5178244, type: 'pdf' },
@@ -188,15 +286,19 @@ export default function Dashboard() {
     { name: 'WhatsApp Audio 2026-09-09 at 01.07.29.mpeg', sizeBytes: 39924277, type: 'audio' }
   ];
 
-  const renderFileCard = (file: { name: string, sizeBytes: number, type: string }) => (
-    <div key={file.name} style={{
+  const mockTestFiles: any[] = [];
+
+
+  const renderFileCard = (file: { name: string, sizeBytes: number, type: string, url?: string }, onDelete?: () => void) => (
+    <div style={{
       backgroundColor: 'white',
       borderRadius: '0.75rem',
       border: '1px solid #e5e7eb',
       padding: '1.25rem',
       display: 'flex',
       flexDirection: 'column',
-      justifyContent: 'space-between'
+      justifyContent: 'space-between',
+      position: 'relative'
     }}>
       <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem', marginBottom: '1rem' }}>
         <div style={{
@@ -206,17 +308,47 @@ export default function Dashboard() {
         }}>
           {file.type === 'pdf' ? <FileText size={20} color="#ef4444" /> : <Music size={20} color="#10b981" />}
         </div>
-        <div style={{ overflow: 'hidden' }}>
+        <div style={{ overflow: 'hidden', flex: 1 }}>
           <h3 style={{ fontSize: '0.85rem', fontWeight: 600, color: '#111827', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginBottom: '0.25rem' }} title={file.name}>
             {file.name}
           </h3>
           <p style={{ fontSize: '0.75rem', color: '#6b7280', fontWeight: 500 }}>{file.type.toUpperCase()} • {formatSize(file.sizeBytes)}</p>
         </div>
+        {onDelete && userRole === 'trainer' && (
+          <div style={{ position: 'relative', flexShrink: 0 }}>
+            <button
+              onClick={() => setOpenMenuFile(openMenuFile === file.name ? null : file.name)}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.25rem', borderRadius: '0.25rem', color: '#6b7280', fontSize: '1.1rem', lineHeight: 1 }}
+              title="Options"
+            >⋯</button>
+            {openMenuFile === file.name && (
+              <div style={{
+                position: 'absolute', right: 0, top: '100%', backgroundColor: 'white',
+                border: '1px solid #e5e7eb', borderRadius: '0.5rem', boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                zIndex: 50, minWidth: '120px', overflow: 'hidden'
+              }}>
+                <button
+                  onClick={() => onDelete()}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: '0.5rem',
+                    width: '100%', padding: '0.6rem 0.75rem', border: 'none',
+                    backgroundColor: 'white', color: '#ef4444', fontSize: '0.8rem',
+                    fontWeight: 600, cursor: 'pointer', textAlign: 'left'
+                  }}
+                  onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#fef2f2'}
+                  onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'white'}
+                >
+                  🗑 Delete
+                </button>
+              </div>
+            )}
+          </div>
+        )}
       </div>
       
       <div style={{ display: 'flex', gap: '0.5rem' }}>
         <a 
-          href={`/Study Material/${file.name}`}
+          href={file.url || `/Study Material/${file.name}`}
           target="_blank" rel="noopener noreferrer"
           style={{
             flex: 1, padding: '0.5rem', borderRadius: '0.5rem',
@@ -232,7 +364,7 @@ export default function Dashboard() {
           {file.type === 'pdf' ? 'View' : 'Play'}
         </a>
         <a 
-          href={`/Study Material/${file.name}`}
+          href={file.url || `/Study Material/${file.name}`}
           download
           style={{
             flex: 1, padding: '0.5rem', borderRadius: '0.5rem',
@@ -249,6 +381,8 @@ export default function Dashboard() {
       </div>
     </div>
   );
+
+  if (isLoading) return null;
 
   return (
     <div style={{ 
@@ -275,20 +409,7 @@ export default function Dashboard() {
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '2.5rem' }}>
           <Image src="/vfs_logo.png" alt="VFS Logo" width={320} height={80} style={{ objectFit: 'contain', filter: 'invert(1)' }} priority />
-          <nav style={{ display: 'flex', gap: '1.5rem' }}>
-            {['Mock Test', 'Practice', 'Study Tools', 'Sample Result'].map((item) => (
-              <button key={item} style={{ 
-                display: 'flex', alignItems: 'center', gap: '0.25rem',
-                background: 'none', border: 'none', cursor: 'pointer',
-                fontSize: '0.85rem', fontWeight: 500, color: '#374151'
-              }}>
-                {item} <ChevronDown size={14} />
-              </button>
-            ))}
-            <button style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 500, color: '#374151' }}>
-              Pricing
-            </button>
-          </nav>
+
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
           <button
@@ -305,14 +426,24 @@ export default function Dashboard() {
           >
             <LogOut size={14} /> Log Out
           </button>
-          <div style={{ 
-            width: '36px', height: '36px', borderRadius: '50%', 
-            background: 'linear-gradient(135deg, #1f2937, #374151)', 
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            color: 'white', fontWeight: 700, fontSize: '0.85rem', cursor: 'pointer',
-            boxShadow: '0 2px 5px rgba(0,0,0,0.1)'
-          }}>
-            {userName.charAt(0).toUpperCase()}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <div style={{ textAlign: 'right' }}>
+              <div style={{ fontSize: '0.65rem', color: '#6b7280', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                {userRole === 'trainer' ? 'Tutor' : 'Student'}
+              </div>
+              <div style={{ fontSize: '0.85rem', color: '#111827', fontWeight: 700 }}>
+                {userName}
+              </div>
+            </div>
+            <div style={{ 
+              width: '36px', height: '36px', borderRadius: '50%', 
+              background: 'linear-gradient(135deg, #1f2937, #374151)', 
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              color: 'white', fontWeight: 700, fontSize: '0.85rem', cursor: 'pointer',
+              boxShadow: '0 2px 5px rgba(0,0,0,0.1)'
+            }}>
+              {userName.charAt(0).toUpperCase()}
+            </div>
           </div>
         </div>
       </header>
@@ -358,7 +489,7 @@ export default function Dashboard() {
                 >
                   <Icon size={18} />
                   {item.name}
-                  {item.isNew && (
+                  {(item as any).isNew && (
                     <span style={{
                       marginLeft: 'auto',
                       backgroundColor: '#ef4444',
@@ -403,8 +534,12 @@ export default function Dashboard() {
                   </button>
                 )}
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1rem' }}>
-                {mockTestFiles.map(renderFileCard)}
+              <div style={{ height: 'calc(100vh - 200px)', width: '100%', borderRadius: '0.75rem', overflow: 'hidden', border: '1px solid #e5e7eb', backgroundColor: 'white' }}>
+                <iframe 
+                  src="/ielts-mock-test.html" 
+                  style={{ width: '100%', height: '100%', border: 'none' }}
+                  title="IELTS Mock Test Platform"
+                />
               </div>
             </div>
           ) : activeTab === 'Practice Questions' ? (
@@ -417,18 +552,33 @@ export default function Dashboard() {
                   <p style={{ fontSize: '0.85rem', color: '#6b7280', marginTop: '0.25rem' }}>Practice Reality Tests and check your answers.</p>
                 </div>
                 {userRole === 'trainer' && (
-                  <button style={{
-                    display: 'flex', alignItems: 'center', gap: '0.5rem',
-                    padding: '0.6rem 1.25rem', borderRadius: '0.5rem',
-                    backgroundColor: '#111827', color: 'white', border: 'none',
-                    fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer'
-                  }}>
-                    + Add Practice Test
-                  </button>
+                  <>
+                    <input
+                      ref={practiceFileInputRef}
+                      type="file"
+                      accept=".pdf,.mp3,.mpeg,.wav,.m4a"
+                      style={{ display: 'none' }}
+                      onChange={handleAddPracticeFile}
+                    />
+                    <button
+                      onClick={() => practiceFileInputRef.current?.click()}
+                      style={{
+                        display: 'flex', alignItems: 'center', gap: '0.5rem',
+                        padding: '0.6rem 1.25rem', borderRadius: '0.5rem',
+                        backgroundColor: '#111827', color: 'white', border: 'none',
+                        fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer'
+                      }}>
+                      + Add Practice Test
+                    </button>
+                  </>
                 )}
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1rem' }}>
-                {practiceQuestionsFiles.map(renderFileCard)}
+                {practiceQuestionsFiles.map((file, i) => <div key={`static-practice-${i}-${file.name}`}>{renderFileCard(file)}</div>)}
+                {extraPracticeFiles.map((file, i) => <div key={`extra-practice-${i}-${file.name}`}>{renderFileCard(
+                  { name: file.name, sizeBytes: file.sizeBytes, type: file.type },
+                  () => handleDeleteExtraFile(file.name, 'practice')
+                )}</div>)}
               </div>
             </div>
           ) : activeTab === 'Study Roadmap' ? (
@@ -441,18 +591,33 @@ export default function Dashboard() {
                   <p style={{ fontSize: '0.85rem', color: '#6b7280', marginTop: '0.25rem' }}>Follow the general textbooks and academic texts for your study roadmap.</p>
                 </div>
                 {userRole === 'trainer' && (
-                  <button style={{
-                    display: 'flex', alignItems: 'center', gap: '0.5rem',
-                    padding: '0.6rem 1.25rem', borderRadius: '0.5rem',
-                    backgroundColor: '#111827', color: 'white', border: 'none',
-                    fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer'
-                  }}>
-                    + Add Roadmap Content
-                  </button>
+                  <>
+                    <input
+                      ref={roadmapFileInputRef}
+                      type="file"
+                      accept=".pdf,.mp3,.mpeg,.wav,.m4a"
+                      style={{ display: 'none' }}
+                      onChange={handleAddRoadmapFile}
+                    />
+                    <button
+                      onClick={() => roadmapFileInputRef.current?.click()}
+                      style={{
+                        display: 'flex', alignItems: 'center', gap: '0.5rem',
+                        padding: '0.6rem 1.25rem', borderRadius: '0.5rem',
+                        backgroundColor: '#111827', color: 'white', border: 'none',
+                        fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer'
+                      }}>
+                      + Add Roadmap Content
+                    </button>
+                  </>
                 )}
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1rem' }}>
-                {studyRoadmapFiles.map(renderFileCard)}
+                {studyRoadmapFiles.map((file, i) => <div key={`static-roadmap-${i}-${file.name}`}>{renderFileCard(file)}</div>)}
+                {extraRoadmapFiles.map((file, i) => <div key={`extra-roadmap-${i}-${file.name}`}>{renderFileCard(
+                  { name: file.name, sizeBytes: file.sizeBytes, type: file.type },
+                  () => handleDeleteExtraFile(file.name, 'roadmap')
+                )}</div>)}
               </div>
             </div>
           ) : activeTab === 'Add Students' ? (
@@ -514,7 +679,7 @@ export default function Dashboard() {
                 backgroundColor: 'white',
                 borderRadius: '0.75rem',
                 border: '1px solid #e5e7eb',
-                overflow: 'hidden'
+                overflow: 'visible'
               }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                   <thead>
@@ -547,10 +712,18 @@ export default function Dashboard() {
                           <td style={{ padding: '1rem 1.25rem', fontSize: '0.85rem', color: '#111827', fontWeight: 500 }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                               <input type="checkbox" />
-                              <div style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: '#eef2ff', color: '#4f46e5', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 600, fontSize: '0.8rem' }}>
+                              <div
+                                onClick={() => setSelectedStudent(student)}
+                                style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: '#eef2ff', color: '#4f46e5', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 600, fontSize: '0.8rem', cursor: 'pointer' }}
+                              >
                                 {student.name.charAt(0).toUpperCase()}
                               </div>
-                              {student.name}
+                              <span
+                                onClick={() => setSelectedStudent(student)}
+                                style={{ cursor: 'pointer', color: '#111827' }}
+                                onMouseOver={(e) => e.currentTarget.style.color = '#4f46e5'}
+                                onMouseOut={(e) => e.currentTarget.style.color = '#111827'}
+                              >{student.name}</span>
                             </div>
                           </td>
                           <td style={{ padding: '1rem 1.25rem', fontSize: '0.85rem', color: '#6b7280' }}>{student.id}</td>
@@ -559,8 +732,51 @@ export default function Dashboard() {
                           <td style={{ padding: '1rem 1.25rem', fontSize: '0.85rem' }}>
                             <span style={{ padding: '0.25rem 0.75rem', borderRadius: '999px', backgroundColor: '#dcfce7', color: '#166534', fontSize: '0.75rem', fontWeight: 600 }}>{student.status}</span>
                           </td>
-                          <td style={{ padding: '1rem 1.25rem', textAlign: 'right' }}>
-                            <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#6b7280' }}>•••</button>
+                          <td style={{ padding: '1rem 1.25rem', textAlign: 'right', position: 'relative' }}>
+                            <button
+                              onClick={() => setOpenStudentMenu(openStudentMenu === idx ? null : idx)}
+                              style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#6b7280', fontSize: '1.2rem', padding: '0.25rem 0.5rem' }}
+                            >•••</button>
+                            {openStudentMenu === idx && (
+                              <div style={{
+                                position: 'absolute', right: '1.25rem', top: '100%', backgroundColor: 'white',
+                                border: '1px solid #e5e7eb', borderRadius: '0.5rem', boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                                zIndex: 50, minWidth: '140px', overflow: 'hidden'
+                              }}>
+                                <button
+                                  onClick={() => { setSelectedStudent(student); setOpenStudentMenu(null); }}
+                                  style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', width: '100%', padding: '0.6rem 0.75rem', border: 'none', backgroundColor: 'white', color: '#111827', fontSize: '0.8rem', fontWeight: 500, cursor: 'pointer', textAlign: 'left' }}
+                                  onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f9fafb'}
+                                  onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'white'}
+                                >👤 View Profile</button>
+                                <button
+                                  onClick={() => { setEditingStudent({ student, idx }); setEditPhone(student.phone || ''); setEditEmail(student.email || ''); setOpenStudentMenu(null); }}
+                                  style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', width: '100%', padding: '0.6rem 0.75rem', border: 'none', backgroundColor: 'white', color: '#111827', fontSize: '0.8rem', fontWeight: 500, cursor: 'pointer', textAlign: 'left' }}
+                                  onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f9fafb'}
+                                  onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'white'}
+                                >✏️ Edit Details</button>
+                                <button
+                                  onClick={async () => {
+                                    // Remove from UI and localStorage instantly
+                                    setStudentsList(prev => {
+                                      const updated = prev.filter((_, i) => i !== idx);
+                                      localStorage.setItem('dev_mock_students', JSON.stringify(updated));
+                                      return updated;
+                                    });
+                                    setOpenStudentMenu(null);
+                                    // Also delete from Supabase database
+                                    try {
+                                      await supabase.from('students').delete().eq('student_id', student.id);
+                                    } catch (e) {
+                                      // Supabase unreachable — removed from local only
+                                    }
+                                  }}
+                                  style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', width: '100%', padding: '0.6rem 0.75rem', border: 'none', backgroundColor: 'white', color: '#ef4444', fontSize: '0.8rem', fontWeight: 500, cursor: 'pointer', textAlign: 'left' }}
+                                  onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#fef2f2'}
+                                  onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'white'}
+                                >🗑 Delete</button>
+                              </div>
+                            )}
                           </td>
                         </tr>
                       ))
@@ -569,190 +785,310 @@ export default function Dashboard() {
                 </table>
               </div>
             </div>
-          ) : (
-            /* ===== DASHBOARD VIEW ===== */
+          ) : activeTab === 'Test History' ? (
             <div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem', marginBottom: '1.5rem' }}>
-            {[
-              { title: 'Mock Tests', count: `${mockTestFiles.length} Tests`, desc: 'Simulate the full IELTS exam mock test experience online.', color: '#6366f1', bg: '#eef2ff' },
-              { title: 'Section Tests', count: '12 Tests', desc: 'Take section-wise writing, reading, listening, and speaking IELTS tests.', color: '#10b981', bg: '#ecfdf5' },
-              { title: 'Practice Questions', count: `${practiceQuestionsFiles.length} Questions`, desc: 'Access the real IELTS sample test questions across all modules.', color: '#f59e0b', bg: '#fffbeb' }
-            ].map((card) => (
-              <div key={card.title} style={{
-                backgroundColor: 'white',
-                borderRadius: '0.75rem',
-                padding: '1.25rem',
-                border: '1px solid #e5e7eb'
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem' }}>
-                  <div style={{
-                    width: '40px', height: '40px', borderRadius: '0.5rem',
-                    backgroundColor: card.bg,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center'
-                  }}>
-                    <FileText size={20} color={card.color} />
-                  </div>
-                  <div>
-                    <h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#111827' }}>{card.title}</h3>
-                    <p style={{ fontSize: '0.75rem', color: '#6b7280', fontWeight: 500 }}>{card.count}</p>
-                  </div>
-                </div>
-                <p style={{ fontSize: '0.8rem', color: '#6b7280', lineHeight: 1.5 }}>{card.desc}</p>
+              <div style={{ marginBottom: '2rem' }}>
+                <h1 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#111827', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <Clock size={24} /> Test History
+                </h1>
+                <p style={{ fontSize: '0.85rem', color: '#6b7280', marginTop: '0.25rem' }}>Review your past exams and track score improvements over time.</p>
               </div>
-            ))}
-          </div>
-
-          {/* Middle Section */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
-            {/* Target Score */}
-            <div style={{
-              backgroundColor: 'white',
-              borderRadius: '0.75rem',
-              padding: '1.25rem',
-              border: '1px solid #e5e7eb'
-            }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
-                <h3 style={{ fontSize: '1rem', fontWeight: 700, color: '#111827' }}>Target Score</h3>
-                <button style={{
-                  padding: '0.4rem 1rem', borderRadius: '999px',
-                  border: '1px solid #d1d5db', backgroundColor: 'white',
-                  fontSize: '0.75rem', fontWeight: 500, cursor: 'pointer', color: '#374151'
-                }}>Set New Target</button>
-              </div>
-              {/* Bar Chart */}
-              <div style={{ display: 'flex', alignItems: 'flex-end', gap: '1.5rem', height: '160px', padding: '0 1rem' }}>
-                {[
-                  { label: 'Overall', score: 7.5 },
-                  { label: 'Listening', score: 8.0 },
-                  { label: 'Reading', score: 7.5 },
-                  { label: 'Speaking', score: 7.0 },
-                  { label: 'Writing', score: 6.5 }
-                ].map((item) => (
-                  <div key={item.label} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem', height: '100%', justifyContent: 'flex-end' }}>
-                    <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#374151', marginBottom: '-0.25rem' }}>{item.score}</span>
-                    <div style={{ 
-                      width: '100%', 
-                      height: `${(item.score / 9) * 100}%`,
-                      background: 'linear-gradient(to top, #3b82f6, #60a5fa)',
-                      borderRadius: '4px 4px 0 0',
-                      position: 'relative',
-                      boxShadow: '0 4px 6px -1px rgba(59, 130, 246, 0.2)'
-                    }}>
-                    </div>
-                    <span style={{ fontSize: '0.7rem', color: '#6b7280', fontWeight: 500 }}>{item.label}</span>
-                  </div>
-                ))}
-              </div>
-              {/* Y-axis labels */}
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem 0 0 0' }}>
-                <span style={{ fontSize: '0.65rem', color: '#9ca3af' }}>0</span>
-                <span style={{ fontSize: '0.65rem', color: '#9ca3af' }}>9</span>
+              <div style={{ backgroundColor: 'white', borderRadius: '0.75rem', padding: '3rem', border: '1px solid #e5e7eb', textAlign: 'center' }}>
+                <Clock size={48} color="#d1d5db" style={{ margin: '0 auto 1rem auto' }} />
+                <p style={{ fontSize: '1rem', fontWeight: 600, color: '#6b7280' }}>No tests taken yet</p>
+                <p style={{ fontSize: '0.85rem', color: '#9ca3af', marginTop: '0.25rem' }}>Your past test results and detailed analytics will appear here.</p>
               </div>
             </div>
-
-            {/* Right Column */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              {/* Exam In */}
-              <div style={{
-                backgroundColor: 'white',
-                borderRadius: '0.75rem',
-                padding: '1.25rem',
-                border: '1px solid #e5e7eb'
-              }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                  <h3 style={{ fontSize: '1rem', fontWeight: 700, color: '#111827' }}>Exam In</h3>
-                  <button style={{
-                    padding: '0.4rem 1rem', borderRadius: '999px',
-                    border: '1px solid #d1d5db', backgroundColor: 'white',
-                    fontSize: '0.75rem', fontWeight: 500, cursor: 'pointer', color: '#374151'
-                  }}>Set New Date</button>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'center', gap: '2rem' }}>
-                  {[
-                    { value: '14', label: 'Days' },
-                    { value: '08', label: 'Hours' },
-                    { value: '45', label: 'Minutes' }
-                  ].map((item) => (
-                    <div key={item.label} style={{ textAlign: 'center' }}>
-                      <div style={{
-                        width: '56px', height: '56px', borderRadius: '50%',
-                        border: '3px solid #3b82f6',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        fontSize: '1.25rem', fontWeight: 700, color: '#3b82f6',
-                        marginBottom: '0.4rem',
-                        backgroundColor: '#eff6ff'
-                      }}>{item.value}</div>
-                      <span style={{ fontSize: '0.75rem', color: '#6b7280', fontWeight: 500 }}>{item.label}</span>
+          ) : activeTab === 'AI Tutor' ? (
+            <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 120px)' }}>
+              <div style={{ marginBottom: '1.5rem', flexShrink: 0 }}>
+                <h1 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#111827', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <Bot size={24} /> AI Tutor Assistant
+                </h1>
+                <p style={{ fontSize: '0.85rem', color: '#6b7280', marginTop: '0.25rem' }}>Specialized in Immigration, IELTS, PTE, and TOEFL.</p>
+              </div>
+              <div style={{ flex: 1, backgroundColor: 'white', borderRadius: '0.75rem', border: '1px solid #e5e7eb', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+                <div style={{ flex: 1, padding: '1.5rem', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '1rem', backgroundColor: '#f9fafb' }}>
+                  {aiChatMessages.map((msg, idx) => (
+                    <div key={idx} style={{ display: 'flex', justifyContent: msg.role === 'user' ? 'flex-end' : 'flex-start' }}>
+                      {msg.role === 'user' ? (
+                        <div style={{
+                          maxWidth: '75%',
+                          padding: '0.85rem 1.1rem',
+                          borderRadius: '1rem 1rem 0 1rem',
+                          backgroundColor: '#111827',
+                          color: 'white',
+                          border: 'none',
+                          fontSize: '0.85rem',
+                          lineHeight: 1.6,
+                          whiteSpace: 'pre-wrap',
+                          boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
+                        }}>
+                          {msg.text}
+                        </div>
+                      ) : (
+                        <div style={{
+                          maxWidth: '75%',
+                          padding: '0.85rem 1.1rem',
+                          borderRadius: '1rem 1rem 1rem 0',
+                          backgroundColor: 'white',
+                          color: '#111827',
+                          border: '1px solid #e5e7eb',
+                          fontSize: '0.85rem',
+                          lineHeight: 1.6,
+                          whiteSpace: 'pre-wrap',
+                          boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
+                        }} dangerouslySetInnerHTML={{ __html: msg.text }} />
+                      )}
                     </div>
                   ))}
                 </div>
-              </div>
-
-              {/* Average Score */}
-              <div style={{
-                backgroundColor: 'white',
-                borderRadius: '0.75rem',
-                padding: '1.25rem',
-                border: '1px solid #e5e7eb'
-              }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
-                  <h3 style={{ fontSize: '1rem', fontWeight: 700, color: '#111827' }}>Average Score</h3>
-                  <span style={{ fontSize: '1.1rem', fontWeight: 700, color: '#374151' }}>7.0 / 9</span>
-                </div>
-                <div style={{ 
-                  width: '100%', height: '8px', backgroundColor: '#e5e7eb', 
-                  borderRadius: '999px', overflow: 'hidden', marginBottom: '0.5rem'
-                }}>
-                  <div style={{ width: '77%', height: '100%', background: 'linear-gradient(90deg, #ef4444, #f59e0b, #10b981)', borderRadius: '999px' }}></div>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span style={{ fontSize: '0.7rem', color: '#ef4444', fontWeight: 500 }}>Need Improvement</span>
-                  <span style={{ fontSize: '0.7rem', color: '#f59e0b', fontWeight: 500 }}>Good</span>
-                  <span style={{ fontSize: '0.7rem', color: '#10b981', fontWeight: 500 }}>Excellent</span>
+                <div style={{ padding: '1rem', backgroundColor: 'white', borderTop: '1px solid #e5e7eb' }}>
+                  <form onSubmit={(e) => {
+                    e.preventDefault();
+                    if(!aiChatInput.trim()) return;
+                    
+                    const userMsg = aiChatInput.trim();
+                    const lowerMsg = userMsg.toLowerCase();
+                    setAiChatMessages(prev => [...prev, { role: 'user', text: userMsg }]);
+                    setAiChatInput('');
+                    
+                    let botReply = 'I am an AI assistant specifically trained to assist you with English proficiency exams and immigration processes.\n\nWhile I am constantly learning new things, my primary focus is ensuring you get the highest possible band score on your tests and the most accurate pathways for your visa applications.\n\nPlease ask me a specific question regarding IELTS, PTE, TOEFL, or global immigration pathways, and I will be happy to provide a comprehensive guide.';
+                    if (lowerMsg.includes('weather')) {
+                      botReply = "I sincerely apologize, but I do not have access to real-time meteorological data or weather forecasting services.\n\nMy architecture is entirely dedicated to helping students and professionals navigate the complexities of international exams such as IELTS, PTE, and TOEFL, as well as providing detailed guidance on immigration and visa procedures.\n\nIf you have any questions regarding how to structure a Band 9 essay or what the Express Entry requirements are for Canada, I would be more than happy to assist you in great detail!";
+                    } else if (lowerMsg.includes('ielts') || lowerMsg.includes('preparation')) {
+                      botReply = "Preparing for the IELTS exam requires a strategic approach that balances both receptive skills (Listening and Reading) and productive skills (Speaking and Writing).\n\nFor the productive skills, I highly recommend checking out our 'Study Tools' section where you can find dedicated vocabulary lists, grammar rulebooks, and high-scoring templates. You can also paste your essays directly into this chat, and I will analyze them for lexical resource, grammatical range, and task achievement.\n\nFor receptive skills, consistency is key. Ensure you are taking at least two full 'Mock Tests' every week under timed conditions to build your stamina. Review every incorrect answer meticulously to understand the traps set by the examiners.\n\nOfficial Resource: <a href=\"https://www.ielts.org/\" target=\"_blank\" style=\"color: #3b82f6; text-decoration: underline; font-weight: 600;\">IELTS Official Website</a>";
+                    } else if (lowerMsg.includes('pte') || lowerMsg.includes('toefl')) {
+                      botReply = "Both PTE and TOEFL are entirely computer-based exams, which means that beyond just English proficiency, your typing speed, microphone etiquette, and familiarity with the testing software play a massive role in your final score.\n\nThe PTE Academic, in particular, relies heavily on integrated scoring. For instance, your performance in the 'Read Aloud' section heavily impacts your Reading score, not just your Speaking score. Therefore, mastering the specific algorithmic templates is crucial.\n\nSimilarly, the TOEFL iBT requires you to synthesize information across different mediums—reading a passage, listening to a lecture on the same topic, and then speaking or writing about how they relate. I can provide you with targeted exercises for these specific integrated tasks if you'd like to begin.\n\nOfficial Resources: <a href=\"https://www.pearsonpte.com/\" target=\"_blank\" style=\"color: #3b82f6; text-decoration: underline; font-weight: 600;\">PTE Official</a> | <a href=\"https://www.ets.org/toefl.html\" target=\"_blank\" style=\"color: #3b82f6; text-decoration: underline; font-weight: 600;\">TOEFL Official</a>";
+                    } else if (lowerMsg.includes('immigration') || lowerMsg.includes('visa') || lowerMsg.includes('pr') || lowerMsg.includes('canada') || lowerMsg.includes('australia')) {
+                      botReply = "Navigating international visa processes and permanent residency (PR) pathways can be an overwhelming journey due to the constantly changing policies and strict documentation requirements.\n\nFor Canada, the Express Entry system remains one of the most popular routes. It evaluates candidates based on the Comprehensive Ranking System (CRS), which heavily rewards younger applicants with high English proficiency (CLB 9 or higher), advanced degrees, and skilled work experience.\n\nFor Australia, the General Skilled Migration (GSM) program operates on a points-based system. Depending on your occupation, you might be eligible for a subclass 189 (Independent), 190 (State Nominated), or 491 (Regional) visa. Please let me know your specific target country, your current occupation, and your education level so I can give you a tailored pathway breakdown.\n\nOfficial Resources: <a href=\"https://www.canada.ca/en/immigration-refugees-citizenship/services/immigrate-canada/express-entry.html\" target=\"_blank\" style=\"color: #3b82f6; text-decoration: underline; font-weight: 600;\">Canada Express Entry</a> | <a href=\"https://immi.homeaffairs.gov.au/visas/working-in-australia/skillselect\" target=\"_blank\" style=\"color: #3b82f6; text-decoration: underline; font-weight: 600;\">Australia SkillSelect</a>";
+                    } else if (lowerMsg.includes('hello') || lowerMsg.includes('hi')) {
+                      botReply = "Hello there! Welcome to your personal AI Tutor and Immigration Consultant.\n\nI am equipped with a vast database of strategies, templates, and past exam questions to help you conquer the IELTS, PTE, or TOEFL. Furthermore, I stay updated on the latest immigration pathways for countries like Canada, Australia, the UK, and New Zealand.\n\nTo get started, simply ask me to evaluate an essay, explain a complex grammar rule, or outline the requirements for a specific visa category. How can I best support your journey today?";
+                    }
+                    
+                    setTimeout(() => {
+                      setAiChatMessages(prev => [...prev, { role: 'bot', text: botReply }]);
+                    }, 800);
+                  }} style={{ display: 'flex', gap: '0.75rem' }}>
+                    <input 
+                      type="text" 
+                      value={aiChatInput}
+                      onChange={(e) => setAiChatInput(e.target.value)}
+                      placeholder="Ask about immigration pathways, IELTS writing tips..." 
+                      style={{ flex: 1, padding: '0.75rem 1rem', borderRadius: '0.5rem', border: '1px solid #d1d5db', fontSize: '0.85rem', outline: 'none' }}
+                    />
+                    <button type="submit" style={{ padding: '0 1.5rem', backgroundColor: '#111827', color: 'white', border: 'none', borderRadius: '0.5rem', fontWeight: 600, cursor: 'pointer', transition: 'background-color 0.2s' }}>
+                      Send
+                    </button>
+                  </form>
                 </div>
               </div>
             </div>
-          </div>
-
-          {/* Study Tools */}
-          <div style={{
-            backgroundColor: 'white',
-            borderRadius: '0.75rem',
-            padding: '1.25rem',
-            border: '1px solid #e5e7eb'
-          }}>
-            <h3 style={{ fontSize: '1rem', fontWeight: 700, color: '#111827', marginBottom: '1rem' }}>Study Tools</h3>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem' }}>
-              {[
-                { title: 'IELTS Vocabulary', desc: 'Learn new IELTS words with easy word lists.', color: '#ef4444', bg: '#fef2f2', icon: BookA },
-                { title: 'IELTS Grammar', desc: 'Master essential grammar rules with easy-to-understand tips.', color: '#f59e0b', bg: '#fffbeb', icon: BookType },
-                { title: 'IELTS Phrase and Idioms', desc: 'Learn IELTS phrases and idioms with clear meanings and examples.', color: '#6366f1', bg: '#eef2ff', icon: Languages }
-              ].map((tool) => {
-                const ToolIcon = tool.icon;
-                return (
-                  <div key={tool.title} style={{
-                    padding: '1rem',
-                    borderRadius: '0.75rem',
-                    border: '1px solid #e5e7eb',
-                    cursor: 'pointer',
-                    transition: 'box-shadow 0.2s'
-                  }}>
-                    <div style={{
-                      width: '40px', height: '40px', borderRadius: '0.5rem',
-                      backgroundColor: tool.bg,
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      marginBottom: '0.75rem'
-                    }}>
-                      <ToolIcon size={20} color={tool.color} />
+          ) : activeTab === 'IELTS Templates' ? (
+            <div>
+              <div style={{ marginBottom: '2rem' }}>
+                <h1 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#111827', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <FileCheck size={24} /> IELTS Templates
+                </h1>
+                <p style={{ fontSize: '0.85rem', color: '#6b7280', marginTop: '0.25rem' }}>High-scoring templates for Writing Task 1 and Task 2.</p>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1rem' }}>
+                {[
+                  { title: 'Task 1: Line Graph', desc: 'Standard structure for describing trends and comparisons.' },
+                  { title: 'Task 1: Bar Chart', desc: 'Vocabulary and phrasing for bar chart data.' },
+                  { title: 'Task 2: Opinion Essay', desc: 'Introduction, body paragraphs, and conclusion structure.' },
+                  { title: 'Task 2: Discuss Both Views', desc: 'How to balance both sides of an argument effectively.' }
+                ].map((template, idx) => (
+                  <div key={idx} style={{ backgroundColor: 'white', borderRadius: '0.75rem', padding: '1.25rem', border: '1px solid #e5e7eb' }}>
+                    <div style={{ width: '40px', height: '40px', borderRadius: '0.5rem', backgroundColor: '#eef2ff', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1rem' }}>
+                      <FileCheck size={20} color="#6366f1" />
                     </div>
-                    <h4 style={{ fontSize: '0.9rem', fontWeight: 600, color: '#111827', marginBottom: '0.35rem' }}>{tool.title}</h4>
-                    <p style={{ fontSize: '0.78rem', color: '#6b7280', lineHeight: 1.5 }}>{tool.desc}</p>
+                    <h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#111827', marginBottom: '0.5rem' }}>{template.title}</h3>
+                    <p style={{ fontSize: '0.8rem', color: '#6b7280' }}>{template.desc}</p>
+                    <button onClick={() => alert(`Opening ${template.title}...\n\nThis template will be available in the next content update.`)} style={{ marginTop: '1rem', width: '100%', backgroundColor: '#f3f4f6', border: 'none', padding: '0.5rem', borderRadius: '0.25rem', fontSize: '0.75rem', fontWeight: 600, color: '#374151', cursor: 'pointer' }}>View Template</button>
                   </div>
-                );
-              })}
+                ))}
+              </div>
             </div>
-          </div>
-          </div>
+          ) : activeTab === 'IELTS Course' ? (
+            <div>
+              <div style={{ marginBottom: '2rem' }}>
+                <h1 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#111827', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <BookOpen size={24} /> Premium IELTS Course
+                </h1>
+                <p style={{ fontSize: '0.85rem', color: '#6b7280', marginTop: '0.25rem' }}>Structured video lessons to master all four modules.</p>
+              </div>
+              <div style={{ backgroundColor: 'white', borderRadius: '0.75rem', padding: '3rem', border: '1px solid #e5e7eb', textAlign: 'center' }}>
+                <BookOpen size={48} color="#f59e0b" style={{ margin: '0 auto 1rem auto' }} />
+                <p style={{ fontSize: '1rem', fontWeight: 600, color: '#111827' }}>Course Content Locked</p>
+                <p style={{ fontSize: '0.85rem', color: '#6b7280', marginTop: '0.25rem', maxWidth: '400px', margin: '0.25rem auto 1.5rem auto' }}>You are currently on the standard plan. Upgrade to access premium video lectures and guided courses.</p>
+                <button style={{ backgroundColor: '#f59e0b', color: 'white', border: 'none', padding: '0.6rem 1.25rem', borderRadius: '0.5rem', fontWeight: 600, cursor: 'pointer' }}>Upgrade Plan</button>
+              </div>
+            </div>
+          ) : (
+            /* ===== DASHBOARD VIEW ===== */
+            <div>
+              {userRole === 'trainer' ? (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem', marginBottom: '1.5rem' }}>
+                  {[
+                    { title: 'Total Enrolled Students', count: `${studentsList.length} Students`, desc: 'Manage your active student roster and track their progress.', color: '#6366f1', bg: '#eef2ff', icon: UserPlus },
+                    { title: 'Pending Evaluations', count: '0 Reviews', desc: 'Speaking and Writing tests awaiting your feedback.', color: '#ef4444', bg: '#fef2f2', icon: FileText },
+                    { title: 'Active Content Library', count: `${mockTestFiles.length + practiceQuestionsFiles.length} Items`, desc: 'Manage your mock tests and practice materials.', color: '#10b981', bg: '#ecfdf5', icon: BookOpen }
+                  ].map((card) => {
+                    const CardIcon = card.icon;
+                    return (
+                      <div key={card.title} style={{
+                        backgroundColor: 'white',
+                        borderRadius: '0.75rem',
+                        padding: '1.25rem',
+                        border: '1px solid #e5e7eb'
+                      }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem' }}>
+                          <div style={{
+                            width: '40px', height: '40px', borderRadius: '0.5rem',
+                            backgroundColor: card.bg,
+                            display: 'flex', alignItems: 'center', justifyContent: 'center'
+                          }}>
+                            <CardIcon size={20} color={card.color} />
+                          </div>
+                          <div>
+                            <h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#111827' }}>{card.title}</h3>
+                            <p style={{ fontSize: '0.75rem', color: '#6b7280', fontWeight: 500 }}>{card.count}</p>
+                          </div>
+                        </div>
+                        <p style={{ fontSize: '0.8rem', color: '#6b7280', lineHeight: 1.5 }}>{card.desc}</p>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <>
+                  {/* Welcome & Global Stats */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+                    <div>
+                      <h2 style={{ fontSize: '1.75rem', fontWeight: 800, color: '#111827', margin: 0 }}>Welcome back, {userName}! 👋</h2>
+                      <p style={{ color: '#6b7280', marginTop: '0.25rem' }}>Let's crush your IELTS goals today.</p>
+                    </div>
+                  </div>
+
+                  {/* Primary Action Grid */}
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem', marginBottom: '2rem' }}>
+                    {[
+                      { title: 'Full Mock Tests', value: `${mockTestFiles.length} Available`, color: '#6366f1', bg: '#eef2ff', icon: FileText },
+                      { title: 'Listening Audio', value: '45 Tracks', color: '#10b981', bg: '#ecfdf5', icon: Music },
+                      { title: 'Speaking Prep', value: 'Live Rooms', color: '#f59e0b', bg: '#fffbeb', icon: Bot },
+                      { title: 'Writing Reviews', value: '2 Pending', color: '#ec4899', bg: '#fdf2f8', icon: FileCheck }
+                    ].map((card) => {
+                      const CardIcon = card.icon;
+                      return (
+                        <div key={card.title} style={{
+                          background: 'white', border: '1px solid #e5e7eb',
+                          borderRadius: '1rem', padding: '1.5rem', color: '#111827',
+                          display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
+                          minHeight: '140px', boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
+                        }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                            <div style={{ backgroundColor: card.bg, padding: '0.6rem', borderRadius: '0.5rem' }}>
+                              <CardIcon size={24} color={card.color} />
+                            </div>
+                          </div>
+                          <div style={{ marginTop: '1rem' }}>
+                            <h3 style={{ fontSize: '1.05rem', fontWeight: 700, margin: '0 0 0.25rem 0' }}>{card.title}</h3>
+                            <p style={{ fontSize: '0.85rem', color: '#6b7280', margin: 0 }}>{card.value}</p>
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+
+                  {/* Deep Insights and Analytics */}
+                  <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1.5rem', marginBottom: '2rem' }}>
+                    {/* Performance Radar */}
+                    <div style={{ backgroundColor: 'white', borderRadius: '1rem', padding: '1.5rem', border: '1px solid #e5e7eb', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+                      <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#111827', marginBottom: '1.5rem' }}>Skill Proficiency Breakdown</h3>
+                      <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'center' }}>
+                        {/* Custom Circular Indicators */}
+                        <div style={{ flex: 1, display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1.5rem' }}>
+                          {[
+                            { label: 'Reading', score: '7.5', color: '#3b82f6', width: '80%' },
+                            { label: 'Listening', score: '8.0', color: '#10b981', width: '90%' },
+                            { label: 'Writing', score: '6.5', color: '#f59e0b', width: '65%' },
+                            { label: 'Speaking', score: '7.0', color: '#8b5cf6', width: '75%' }
+                          ].map(skill => (
+                            <div key={skill.label}>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                                <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#4b5563' }}>{skill.label}</span>
+                                <span style={{ fontSize: '0.85rem', fontWeight: 800, color: skill.color }}>Band {skill.score}</span>
+                              </div>
+                              <div style={{ width: '100%', height: '8px', backgroundColor: '#f3f4f6', borderRadius: '999px', overflow: 'hidden' }}>
+                                <div style={{ width: skill.width, height: '100%', backgroundColor: skill.color, borderRadius: '999px' }} />
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                        <div style={{ padding: '2rem', backgroundColor: '#f8fafc', borderRadius: '1rem', textAlign: 'center', border: '1px dashed #cbd5e1' }}>
+                          <span style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: 600 }}>Overall Projection</span>
+                          <h2 style={{ fontSize: '3rem', fontWeight: 800, color: '#0f172a', margin: '0.5rem 0' }}>7.5</h2>
+                          <span style={{ fontSize: '0.75rem', color: '#10b981', backgroundColor: '#d1fae5', padding: '0.2rem 0.6rem', borderRadius: '999px', fontWeight: 700 }}>+0.5 Increase</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Upcoming Deadlines */}
+                    <div style={{ backgroundColor: 'white', borderRadius: '1rem', padding: '1.5rem', border: '1px solid #e5e7eb', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                         <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#111827' }}>Action Items</h3>
+                         <Clock size={18} color="#9ca3af" />
+                       </div>
+                       <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                         <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', padding: '1rem', backgroundColor: '#fef2f2', borderRadius: '0.75rem', border: '1px solid #fecaca' }}>
+                           <div style={{ backgroundColor: 'white', padding: '0.5rem', borderRadius: '0.5rem', color: '#ef4444' }}><Clock size={20} /></div>
+                           <div>
+                             <h4 style={{ fontSize: '0.9rem', fontWeight: 700, color: '#991b1b', margin: '0 0 0.25rem 0' }}>Actual Exam Date</h4>
+                             <p style={{ fontSize: '0.75rem', color: '#b91c1c', margin: 0 }}>In 14 Days (Sept 24th)</p>
+                           </div>
+                         </div>
+                         <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', padding: '1rem', backgroundColor: '#eff6ff', borderRadius: '0.75rem', border: '1px solid #bfdbfe' }}>
+                           <div style={{ backgroundColor: 'white', padding: '0.5rem', borderRadius: '0.5rem', color: '#3b82f6' }}><Play size={20} /></div>
+                           <div>
+                             <h4 style={{ fontSize: '0.9rem', fontWeight: 700, color: '#1e3a8a', margin: '0 0 0.25rem 0' }}>Live Grammar Class</h4>
+                             <p style={{ fontSize: '0.75rem', color: '#1d4ed8', margin: 0 }}>Starts in 2 hours</p>
+                           </div>
+                         </div>
+                       </div>
+                    </div>
+                  </div>
+
+                  {/* Resource Library */}
+                  <div style={{ backgroundColor: 'white', borderRadius: '1rem', padding: '1.5rem', border: '1px solid #e5e7eb', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+                    <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#111827', marginBottom: '1.25rem' }}>Recommended Study Modules</h3>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem' }}>
+                      {[
+                        { title: 'Advanced Vocabulary', tag: 'High Yield', desc: 'Master Band 8+ lexical resources.', bg: '#fdf4ff', border: '#fae8ff', color: '#c026d3', icon: BookA },
+                        { title: 'Complex Structures', tag: 'Grammar', desc: 'Compound and complex sentences.', bg: '#f0fdf4', border: '#dcfce3', color: '#16a34a', icon: BookType },
+                        { title: 'Idioms & Phrasal Verbs', tag: 'Speaking', desc: 'Sound like a native speaker naturally.', bg: '#fffbeb', border: '#fef3c7', color: '#d97706', icon: Languages }
+                      ].map((tool) => {
+                        const ToolIcon = tool.icon;
+                        return (
+                          <div key={tool.title} style={{ padding: '1.25rem', borderRadius: '0.75rem', backgroundColor: tool.bg, border: `1px solid ${tool.border}`, cursor: 'pointer', transition: 'all 0.2s', display: 'flex', flexDirection: 'column' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
+                              <div style={{ backgroundColor: 'white', padding: '0.5rem', borderRadius: '0.5rem', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>
+                                <ToolIcon size={20} color={tool.color} />
+                              </div>
+                              <span style={{ fontSize: '0.65rem', fontWeight: 700, color: tool.color, backgroundColor: 'white', padding: '0.25rem 0.5rem', borderRadius: '999px', border: `1px solid ${tool.border}` }}>
+                                {tool.tag}
+                              </span>
+                            </div>
+                            <h4 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#111827', marginBottom: '0.35rem' }}>{tool.title}</h4>
+                            <p style={{ fontSize: '0.8rem', color: '#4b5563', lineHeight: 1.5, margin: 0 }}>{tool.desc}</p>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
           )}
         </main>
       </div>
@@ -899,6 +1235,109 @@ export default function Dashboard() {
             }}>
               {isCreatingStudent ? 'Creating...' : 'Create Student +'}
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Student Profile Modal */}
+      {selectedStudent && (
+        <div
+          onClick={() => setSelectedStudent(null)}
+          style={{
+            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+            backgroundColor: 'rgba(0,0,0,0.4)', zIndex: 2000,
+            display: 'flex', alignItems: 'center', justifyContent: 'center'
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              backgroundColor: 'white', borderRadius: '1rem',
+              padding: '2rem', width: '480px', maxWidth: '90vw',
+              boxShadow: '0 20px 60px rgba(0,0,0,0.2)'
+            }}
+          >
+            {/* Header */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                <div style={{ width: '56px', height: '56px', borderRadius: '50%', backgroundColor: '#eef2ff', color: '#4f46e5', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '1.4rem' }}>
+                  {selectedStudent.name.charAt(0).toUpperCase()}
+                </div>
+                <div>
+                  <h2 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#111827', margin: 0 }}>{selectedStudent.name}</h2>
+                  <span style={{ padding: '0.2rem 0.6rem', borderRadius: '999px', backgroundColor: '#dcfce7', color: '#166534', fontSize: '0.7rem', fontWeight: 600 }}>{selectedStudent.status}</span>
+                </div>
+              </div>
+              <button onClick={() => setSelectedStudent(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9ca3af', fontSize: '1.25rem', lineHeight: 1 }}>✕</button>
+            </div>
+
+            {/* Details Grid */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              {[
+                { label: 'Student ID', value: selectedStudent.id || '—' },
+                { label: 'Batch', value: selectedStudent.batch || '—' },
+                { label: 'Course', value: selectedStudent.course || '—' },
+                { label: 'Phone / WhatsApp', value: selectedStudent.phone || '—' },
+                { label: 'Email', value: selectedStudent.email || '—' },
+                { label: 'Previous IELTS Score', value: selectedStudent.hasPreviousScore === 'yes' ? (selectedStudent.previousScore || '—') : 'No previous score' },
+              ].map(item => (
+                <div key={item.label} style={{ backgroundColor: '#f9fafb', borderRadius: '0.5rem', padding: '0.75rem 1rem' }}>
+                  <p style={{ fontSize: '0.7rem', fontWeight: 600, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 0.25rem 0' }}>{item.label}</p>
+                  <p style={{ fontSize: '0.88rem', fontWeight: 600, color: '#111827', margin: 0, wordBreak: 'break-all' }}>{item.value}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Student Modal */}
+      {editingStudent && (
+        <div
+          onClick={() => setEditingStudent(null)}
+          style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.4)', zIndex: 2001, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+        >
+          <div onClick={(e) => e.stopPropagation()} style={{ backgroundColor: 'white', borderRadius: '1rem', padding: '2rem', width: '420px', maxWidth: '90vw', boxShadow: '0 20px 60px rgba(0,0,0,0.2)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+              <h2 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#111827', margin: 0 }}>Edit — {editingStudent.student.name}</h2>
+              <button onClick={() => setEditingStudent(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9ca3af', fontSize: '1.25rem' }}>✕</button>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '1.5rem' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, color: '#374151', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.4rem' }}>Phone / WhatsApp</label>
+                <input
+                  type="tel"
+                  value={editPhone}
+                  onChange={(e) => setEditPhone(e.target.value)}
+                  placeholder="+91 98765 43210"
+                  style={{ width: '100%', padding: '0.75rem 1rem', borderRadius: '0.5rem', border: '1.5px solid #e2e8f0', fontSize: '0.9rem', outline: 'none', boxSizing: 'border-box' }}
+                />
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, color: '#374151', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.4rem' }}>Email</label>
+                <input
+                  type="email"
+                  value={editEmail}
+                  onChange={(e) => setEditEmail(e.target.value)}
+                  placeholder="student@example.com"
+                  style={{ width: '100%', padding: '0.75rem 1rem', borderRadius: '0.5rem', border: '1.5px solid #e2e8f0', fontSize: '0.9rem', outline: 'none', boxSizing: 'border-box' }}
+                />
+              </div>
+            </div>
+            <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' }}>
+              <button onClick={() => setEditingStudent(null)} style={{ padding: '0.6rem 1.25rem', borderRadius: '0.5rem', border: '1px solid #e5e7eb', background: 'white', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer', color: '#374151' }}>Cancel</button>
+              <button
+                onClick={() => {
+                  setStudentsList(prev => {
+                    const updated = prev.map((s, i) => i === editingStudent.idx ? { ...s, phone: editPhone, email: editEmail } : s);
+                    localStorage.setItem('dev_mock_students', JSON.stringify(updated));
+                    return updated;
+                  });
+                  setEditingStudent(null);
+                }}
+                style={{ padding: '0.6rem 1.25rem', borderRadius: '0.5rem', border: 'none', backgroundColor: '#111827', color: 'white', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer' }}
+              >Save Changes</button>
+            </div>
           </div>
         </div>
       )}

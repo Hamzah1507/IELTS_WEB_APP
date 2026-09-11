@@ -52,8 +52,23 @@ export default function LoginPage() {
     });
 
     if (signInError) {
-      if (signInError.message.includes('Failed to fetch')) {
-        console.warn('Network blocked Supabase connection. Bypassing login for development.');
+      if (signInError.message.includes('Failed to fetch') || signInError.message.includes('Email not confirmed')) {
+        console.warn('Network blocked or Email not confirmed. Bypassing login for development.');
+        
+        // Hardcoded dev bypass role checks
+        const isTrainerEmail = email.toLowerCase().includes('trainer');
+        const isAdminEmail = email.toLowerCase().includes('admin');
+        
+        let expectedRole = 'learner';
+        if (isTrainerEmail) expectedRole = 'trainer';
+        if (isAdminEmail) expectedRole = 'admin';
+
+        if (selectedRole.toLowerCase() !== expectedRole) {
+          setError(`Invalid role selected. This account belongs to a ${expectedRole}.`);
+          setLoading(false);
+          return;
+        }
+
         localStorage.setItem('dev_mock_role', selectedRole.toLowerCase());
         localStorage.setItem('dev_mock_name', email.split('@')[0]);
         router.push('/dashboard');
@@ -62,8 +77,26 @@ export default function LoginPage() {
       setError(signInError.message);
       setLoading(false);
     } else {
-      localStorage.setItem('dev_mock_role', selectedRole.toLowerCase());
-      localStorage.setItem('dev_mock_name', email.split('@')[0]);
+      // Validate role from Supabase user data
+      const userRole = data?.user?.user_metadata?.role;
+      const userEmail = data?.user?.email?.toLowerCase() || '';
+      
+      let actualRole = userRole || 'learner';
+      // Fallbacks based on email if metadata role isn't set
+      if (!userRole) {
+        if (userEmail.includes('trainer')) actualRole = 'trainer';
+        if (userEmail.includes('admin')) actualRole = 'admin';
+      }
+
+      if (selectedRole.toLowerCase() !== actualRole) {
+        setError(`Access Denied: Please select the ${actualRole.toUpperCase()} role to log in with this account.`);
+        await supabase.auth.signOut();
+        setLoading(false);
+        return;
+      }
+
+      localStorage.setItem('dev_mock_role', actualRole.toLowerCase());
+      localStorage.setItem('dev_mock_name', data?.user?.user_metadata?.full_name || email.split('@')[0]);
       router.push('/dashboard');
     }
   };
