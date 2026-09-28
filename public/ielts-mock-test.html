@@ -589,8 +589,6 @@
       opacity: 1 !important;
       box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05);
       margin-bottom: 0.75rem;
-      spellcheck: false;
-      -webkit-spellcheck: false;
     }
 
     .essay-textarea:focus {
@@ -2015,7 +2013,7 @@
        ========================================================================== */
     const CONFIG = {
       // Replace with your deployed Google Apps Script Web App URL (/exec)
-      SCRIPT_URL: "https://script.google.com/macros/s/AKfycbxCYTz4HpATkuHwcRiP5d5Un1cG3JKXpSEjhQmM5nEphBgJOg3Muc9p0fGgGZuUgIVOXQ/exec",
+      SCRIPT_URL: "/api/submit-test",
 
       // Default MP3 sample audio URL for Listening section
       LISTENING_AUDIO_URL: "/listening-audio.mp3",
@@ -3449,12 +3447,30 @@
 
       // PRODUCTION SUBMISSION TO GOOGLE APPS SCRIPT WEB APP
       try {
+        let token = null;
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (key && key.startsWith('sb-') && key.endsWith('-auth-token')) {
+            try {
+              const session = JSON.parse(localStorage.getItem(key) || '{}');
+              if (session && session.access_token) {
+                token = session.access_token;
+                break;
+              }
+            } catch(e) {}
+          }
+        }
+
+        const headers = {
+          'Content-Type': 'application/json'
+        };
+        if (token) {
+          headers['Authorization'] = `Bearer ${token}`;
+        }
+
         await fetch(CONFIG.SCRIPT_URL, {
           method: 'POST',
-          mode: 'no-cors',
-          headers: {
-            'Content-Type': 'text/plain;charset=utf-8'
-          },
+          headers: headers,
           body: JSON.stringify(payload)
         });
 

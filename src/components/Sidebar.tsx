@@ -12,7 +12,7 @@ export default function Sidebar() {
       <div className="p-6">
         <h1 className="flex items-center gap-2" style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--primary)' }}>
           <Award size={28} />
-          AceExam
+          Vectra Foreign Services
         </h1>
       </div>
       <nav style={{ flex: 1, padding: '0 1rem' }}>

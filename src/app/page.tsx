@@ -19,8 +19,10 @@ export default function LoginPage() {
   const router = useRouter();
 
   useEffect(() => {
-    setNum1(Math.floor(Math.random() * 10) + 1);
-    setNum2(Math.floor(Math.random() * 10) + 1);
+    setTimeout(() => {
+      setNum1(Math.floor(Math.random() * 10) + 1);
+      setNum2(Math.floor(Math.random() * 10) + 1);
+    }, 0);
   }, []);
 
   const handleLogin = async () => {
@@ -52,30 +54,9 @@ export default function LoginPage() {
     });
 
     if (signInError) {
-      if (signInError.message.includes('Failed to fetch') || signInError.message.includes('Email not confirmed')) {
-        console.warn('Network blocked or Email not confirmed. Bypassing login for development.');
-        
-        // Hardcoded dev bypass role checks
-        const isTrainerEmail = email.toLowerCase().includes('trainer');
-        const isAdminEmail = email.toLowerCase().includes('admin');
-        
-        let expectedRole = 'learner';
-        if (isTrainerEmail) expectedRole = 'trainer';
-        if (isAdminEmail) expectedRole = 'admin';
-
-        if (selectedRole.toLowerCase() !== expectedRole) {
-          setError(`Invalid role selected. This account belongs to a ${expectedRole}.`);
-          setLoading(false);
-          return;
-        }
-
-        localStorage.setItem('dev_mock_role', selectedRole.toLowerCase());
-        localStorage.setItem('dev_mock_name', email.split('@')[0]);
-        router.push('/dashboard');
-        return;
-      }
       setError(signInError.message);
       setLoading(false);
+      return;
     } else {
       // Validate role from Supabase user data
       const userRole = data?.user?.user_metadata?.role;

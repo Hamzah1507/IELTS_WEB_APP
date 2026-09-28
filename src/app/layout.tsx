@@ -7,7 +7,7 @@ import Navbar from "@/components/Navbar";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "AceExam - Premium IELTS & Exam Preparation Portal",
+  title: "Vectra Foreign Services - Premium IELTS & Exam Preparation Portal",
   description: "Your ultimate portal for IELTS and other competitive exam preparation. Mock tests, practice material and progress tracking.",
 };
 
