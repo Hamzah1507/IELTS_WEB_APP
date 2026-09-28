@@ -4,7 +4,7 @@ import Image from 'next/image';
 import { 
   LayoutDashboard, FileText, HelpCircle, Map, Clock, 
   Bot, FileCheck, BookOpen, ChevronDown, Gift, 
-  BookA, BookType, Languages, UserPlus, X, Eye, EyeOff, Download, Play, Music, LogOut
+  BookA, BookType, Languages, UserPlus, X, Eye, EyeOff, Download, Play, Music, LogOut, Menu
 } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
@@ -12,8 +12,17 @@ import { supabase } from '@/lib/supabase';
 
 export default function Dashboard() {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState('Dashboard');
+  const [activeTab, setActiveTab] = useState(() => {
+    if (typeof window !== 'undefined') return localStorage.getItem('activeTab') || 'Dashboard';
+    return 'Dashboard';
+  });
+  const handleTabChange = (tab: string) => {
+    setActiveTab(tab);
+    if (typeof window !== 'undefined') localStorage.setItem('activeTab', tab);
+  };
+  const [isUploadingFiles, setIsUploadingFiles] = useState(false);
   const [isAddStudentModalOpen, setIsAddStudentModalOpen] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [hasPreviousScore, setHasPreviousScore] = useState('no');
   const [isScoreDropdownOpen, setIsScoreDropdownOpen] = useState(false);
   const [showModalPassword, setShowModalPassword] = useState(false);
@@ -30,8 +39,8 @@ export default function Dashboard() {
   const [userName, setUserName] = useState('Trainer');
   const [isLoading, setIsLoading] = useState(true);
   const [studentsList, setStudentsList] = useState<any[]>([]);
-  const [extraPracticeFiles, setExtraPracticeFiles] = useState<{name: string, sizeBytes: number, type: string, url: string}[]>([]);
-  const [extraRoadmapFiles, setExtraRoadmapFiles] = useState<{name: string, sizeBytes: number, type: string, url: string}[]>([]);
+  const [extraPracticeFiles, setExtraPracticeFiles] = useState<{id?: string, name: string, sizeBytes: number, type: string, url: string}[]>([]);
+  const [extraRoadmapFiles, setExtraRoadmapFiles] = useState<{id?: string, name: string, sizeBytes: number, type: string, url: string}[]>([]);
   const [openMenuFile, setOpenMenuFile] = useState<string | null>(null);
   const [selectedStudent, setSelectedStudent] = useState<any | null>(null);
   const [editingStudent, setEditingStudent] = useState<{student: any, idx: number} | null>(null);
@@ -98,14 +107,20 @@ export default function Dashboard() {
       }
     };
     fetchStudents();
-    const savedPracticeFiles = localStorage.getItem('dev_extra_practice_files');
-    if (savedPracticeFiles) {
-      try { setExtraPracticeFiles(JSON.parse(savedPracticeFiles)); } catch (e) {}
-    }
-    const savedRoadmapFiles = localStorage.getItem('dev_extra_roadmap_files');
-    if (savedRoadmapFiles) {
-      try { setExtraRoadmapFiles(JSON.parse(savedRoadmapFiles)); } catch (e) {}
-    }
+    const fetchMaterials = async () => {
+      const { data, error } = await supabase.from('study_materials').select('*');
+      if (data && !error) {
+        const practice = data.filter((d: any) => d.section === 'practice').map((d: any) => ({
+          id: d.id, name: d.name, sizeBytes: d.size_bytes, type: d.type, url: d.url
+        }));
+        const roadmap = data.filter((d: any) => d.section === 'roadmap').map((d: any) => ({
+          id: d.id, name: d.name, sizeBytes: d.size_bytes, type: d.type, url: d.url
+        }));
+        setExtraPracticeFiles(practice);
+        setExtraRoadmapFiles(roadmap);
+      }
+    };
+    fetchMaterials();
   }, []);
 
   const handleCreateStudent = async () => {
@@ -144,7 +159,7 @@ export default function Dashboard() {
     setIsCreatingStudent(true);
     const authEmail = newStudentId.includes('@') ? newStudentId : `${newStudentId}@student.vectragroup.com`;
     try {
-      await supabase.auth.signUp({
+      const { data, error: signUpError } = await supabase.auth.signUp({
         email: authEmail,
         password: newStudentPassword,
         options: {
@@ -158,6 +173,13 @@ export default function Dashboard() {
           }
         }
       });
+      
+      if (signUpError) {
+        alert(`Supabase Error: ${signUpError.message}`);
+        setIsCreatingStudent(false);
+        return;
+      }
+
       // Insert into students table
       await supabase.from('students').insert({
         name: newStudent.name,
@@ -178,54 +200,97 @@ export default function Dashboard() {
   };
 
   const handleAddPracticeFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
 
-    const formData = new FormData();
-    formData.append('file', file);
-    await fetch('/api/upload', { method: 'POST', body: formData });
+    setIsUploadingFiles(true);
+    try {
+      await Promise.all(files.map(async (file) => {
+        const fileType = file.type.includes('pdf') ? 'pdf' : 'audio';
+        const fileName = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.\-_]/g, '_')}`;
+        
+        const { error: uploadError } = await supabase.storage.from('materials').upload(fileName, file);
+        if (uploadError) {
+          alert(`Upload failed for ${file.name}: ` + uploadError.message);
+          return;
+        }
+        
+        const { data: publicUrlData } = supabase.storage.from('materials').getPublicUrl(fileName);
 
-    const fileType = file.type.includes('pdf') ? 'pdf' : 'audio';
-    const newFile = { name: file.name, sizeBytes: file.size, type: fileType, url: `/Study Material/${file.name}` };
-    setExtraPracticeFiles(prev => {
-      const updated = [...prev, newFile];
-      try { localStorage.setItem('dev_extra_practice_files', JSON.stringify(updated)); } catch(e) {}
-      return updated;
-    });
-    if (practiceFileInputRef.current) practiceFileInputRef.current.value = '';
+        const { data: dbData, error: dbError } = await supabase.from('study_materials').insert({
+          name: file.name,
+          size_bytes: file.size,
+          type: fileType,
+          url: publicUrlData.publicUrl,
+          section: 'practice'
+        }).select().single();
+
+        if (dbError) {
+          alert(`Database save failed for ${file.name}: ` + dbError.message);
+          return;
+        }
+
+        const newFile = { id: dbData.id, name: file.name, sizeBytes: file.size, type: fileType, url: publicUrlData.publicUrl };
+        setExtraPracticeFiles(prev => [...prev, newFile]);
+      }));
+    } finally {
+      setIsUploadingFiles(false);
+      if (practiceFileInputRef.current) practiceFileInputRef.current.value = '';
+    }
   };
 
   const handleAddRoadmapFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
 
-    const formData = new FormData();
-    formData.append('file', file);
-    await fetch('/api/upload', { method: 'POST', body: formData });
+    setIsUploadingFiles(true);
+    try {
+      await Promise.all(files.map(async (file) => {
+        const fileType = file.type.includes('pdf') ? 'pdf' : 'audio';
+        const fileName = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.\-_]/g, '_')}`;
+        
+        const { error: uploadError } = await supabase.storage.from('materials').upload(fileName, file);
+        if (uploadError) {
+          alert(`Upload failed for ${file.name}: ` + uploadError.message);
+          return;
+        }
+        
+        const { data: publicUrlData } = supabase.storage.from('materials').getPublicUrl(fileName);
 
-    const fileType = file.type.includes('pdf') ? 'pdf' : 'audio';
-    const newFile = { name: file.name, sizeBytes: file.size, type: fileType, url: `/Study Material/${file.name}` };
-    setExtraRoadmapFiles(prev => {
-      const updated = [...prev, newFile];
-      try { localStorage.setItem('dev_extra_roadmap_files', JSON.stringify(updated)); } catch(e) {}
-      return updated;
-    });
-    if (roadmapFileInputRef.current) roadmapFileInputRef.current.value = '';
+        const { data: dbData, error: dbError } = await supabase.from('study_materials').insert({
+          name: file.name,
+          size_bytes: file.size,
+          type: fileType,
+          url: publicUrlData.publicUrl,
+          section: 'roadmap'
+        }).select().single();
+
+        if (dbError) {
+          alert(`Database save failed for ${file.name}: ` + dbError.message);
+          return;
+        }
+
+        const newFile = { id: dbData.id, name: file.name, sizeBytes: file.size, type: fileType, url: publicUrlData.publicUrl };
+        setExtraRoadmapFiles(prev => [...prev, newFile]);
+      }));
+    } finally {
+      setIsUploadingFiles(false);
+      if (roadmapFileInputRef.current) roadmapFileInputRef.current.value = '';
+    }
   };
 
-  const handleDeleteExtraFile = (fileName: string, section: 'practice' | 'roadmap') => {
+  const handleDeleteExtraFile = async (fileObj: any, section: 'practice' | 'roadmap') => {
+    if (fileObj.id) {
+      const { error } = await supabase.from('study_materials').delete().eq('id', fileObj.id);
+      if (error) {
+        alert('Failed to delete file from database: ' + error.message);
+        return;
+      }
+    }
     if (section === 'practice') {
-      setExtraPracticeFiles(prev => {
-        const updated = prev.filter(f => f.name !== fileName);
-        try { localStorage.setItem('dev_extra_practice_files', JSON.stringify(updated)); } catch(e) {}
-        return updated;
-      });
+      setExtraPracticeFiles(prev => prev.filter(f => f.name !== fileObj.name));
     } else {
-      setExtraRoadmapFiles(prev => {
-        const updated = prev.filter(f => f.name !== fileName);
-        try { localStorage.setItem('dev_extra_roadmap_files', JSON.stringify(updated)); } catch(e) {}
-        return updated;
-      });
+      setExtraRoadmapFiles(prev => prev.filter(f => f.name !== fileObj.name));
     }
     setOpenMenuFile(null);
   };
@@ -241,50 +306,17 @@ export default function Dashboard() {
   const sidebarItems = [
     { name: 'Dashboard', icon: LayoutDashboard },
     ...(userRole === 'trainer' ? [{ name: 'Add Students', icon: UserPlus }] : []),
-    { name: 'Mock Test', icon: FileText },
     { name: 'Practice Questions', icon: HelpCircle },
-    { name: 'Study Roadmap', icon: Map },
+    { name: 'Test', icon: FileText },
     { name: 'Test History', icon: Clock },
     { name: 'AI Tutor', icon: Bot },
   ];
 
   const formatSize = (bytes: number) => bytes > 1024 * 1024 ? (bytes / (1024 * 1024)).toFixed(1) + ' MB' : Math.round(bytes / 1024) + ' KB';
   
-  const studyRoadmapFiles = [
-    { name: 'Cambridge IELTS 1.pdf', sizeBytes: 2941500, type: 'pdf' },
-    { name: 'Cambridge IELTS  2.pdf', sizeBytes: 21194593, type: 'pdf' },
-    { name: 'Cambridge IELTS 3.pdf', sizeBytes: 3429234, type: 'pdf' },
-    { name: 'Cambridge IELTS 4.pdf', sizeBytes: 10526523, type: 'pdf' },
-    { name: 'Cambridge IELTS 5.pdf', sizeBytes: 13800808, type: 'pdf' },
-    { name: 'Cambridge IELTS  6.pdf', sizeBytes: 21596440, type: 'pdf' },
-    { name: 'Cambridge IELTS 7.pdf', sizeBytes: 21531994, type: 'pdf' },
-    { name: 'Cambridge IELTS 8.pdf', sizeBytes: 4113588, type: 'pdf' },
-    { name: 'Cambridge-IELTS-9.pdf', sizeBytes: 22371471, type: 'pdf' },
-    { name: 'cambridge ielts 10.pdf', sizeBytes: 28428650, type: 'pdf' },
-    { name: 'Cambridge IELTS 11 (1).pdf', sizeBytes: 101520691, type: 'pdf' },
-    { name: 'Cambridge IELTS 12.pdf', sizeBytes: 90903565, type: 'pdf' },
-    { name: 'Cambridge IELTS 13 - Copy.pdf', sizeBytes: 24309632, type: 'pdf' },
-    { name: 'Cam 14.pdf', sizeBytes: 41632654, type: 'pdf' },
-    { name: 'Cambridge IELTS 15 - Copy.pdf', sizeBytes: 27816475, type: 'pdf' },
-    { name: 'Cambridge IELTS 15 Gen _text.pdf', sizeBytes: 8031228, type: 'pdf' },
-    { name: 'Cambridge IELTS 16 Academic_text.pdf', sizeBytes: 4236872, type: 'pdf' },
-    { name: 'Cambridge 17 Academic.pdf', sizeBytes: 36521253, type: 'pdf' },
-    { name: 'Cambridge-IELTS-18-Academic.pdf', sizeBytes: 53619087, type: 'pdf' },
-    { name: 'Cambridge IELTS 19 Academic PDF_removed.pdf', sizeBytes: 14103431, type: 'pdf' },
-  ];
+  const studyRoadmapFiles: { name: string; sizeBytes: number; type: string }[] = [];
 
-  const practiceQuestionsFiles = [
-    { name: 'AC - Reality Test-5 Listening QP.pdf', sizeBytes: 533770, type: 'pdf' },
-    { name: 'AC - Reality Test-5 Reading QP.pdf', sizeBytes: 830708, type: 'pdf' },
-    { name: 'AC - Reality Test-5 Speaking - QP.pdf', sizeBytes: 714626, type: 'pdf' },
-    { name: 'AC - Reality Test-5 Writing Task 1 and 2 - QP.pdf', sizeBytes: 471257, type: 'pdf' },
-    { name: 'AC - Reality Test-5 Listening and Reading - Answers.pdf', sizeBytes: 532292, type: 'pdf' },
-    { name: 'IELTS 20 TEST 1.pdf', sizeBytes: 5327081, type: 'pdf' },
-    { name: 'IELTS 20 TEST 2.pdf', sizeBytes: 5899155, type: 'pdf' },
-    { name: 'IELTS 20 TEST 3.pdf', sizeBytes: 5178244, type: 'pdf' },
-    { name: 'IELTS 20 TEST 4.pdf', sizeBytes: 5430078, type: 'pdf' },
-    { name: 'WhatsApp Audio 2026-09-09 at 01.07.29.mpeg', sizeBytes: 39924277, type: 'audio' }
-  ];
+  const practiceQuestionsFiles: { name: string; sizeBytes: number; type: string }[] = [];
 
   const mockTestFiles: any[] = [];
 
@@ -407,7 +439,13 @@ export default function Dashboard() {
         borderBottom: '1px solid #e5e7eb',
         flexShrink: 0
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '2.5rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+          <button 
+            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#111827', display: 'flex', alignItems: 'center', padding: '0.25rem', borderRadius: '0.25rem' }}
+          >
+            <Menu size={24} />
+          </button>
           <Image src="/vfs_logo.png" alt="VFS Logo" width={320} height={80} style={{ objectFit: 'contain', filter: 'invert(1)' }} priority />
 
         </div>
@@ -428,11 +466,11 @@ export default function Dashboard() {
           </button>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
             <div style={{ textAlign: 'right' }}>
-              <div style={{ fontSize: '0.65rem', color: '#6b7280', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                {userRole === 'trainer' ? 'Tutor' : 'Student'}
-              </div>
               <div style={{ fontSize: '0.85rem', color: '#111827', fontWeight: 700 }}>
                 {userName}
+              </div>
+              <div style={{ fontSize: '0.65rem', color: '#6b7280', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginTop: '0.1rem' }}>
+                {userRole === 'trainer' ? 'Tutor' : 'Student'}
               </div>
             </div>
             <div style={{ 
@@ -450,7 +488,8 @@ export default function Dashboard() {
 
       <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
         {/* Sidebar */}
-        <aside style={{
+        {isSidebarOpen && (
+          <aside style={{
           width: '220px',
           backgroundColor: 'white',
           borderRight: '1px solid #e5e7eb',
@@ -467,7 +506,7 @@ export default function Dashboard() {
               return (
                 <button
                   key={item.name}
-                  onClick={() => setActiveTab(item.name)}
+                  onClick={() => handleTabChange(item.name)}
                   style={{
                     display: 'flex',
                     alignItems: 'center',
@@ -506,6 +545,7 @@ export default function Dashboard() {
             })}
           </div>
         </aside>
+        )}
 
         {/* Main Content */}
         <main style={{ 
@@ -514,35 +554,7 @@ export default function Dashboard() {
           overflowY: 'auto',
           backgroundColor: '#f5f6fa'
         }}>
-          {activeTab === 'Mock Test' ? (
-            <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '2rem' }}>
-                <div>
-                  <h1 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#111827', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <FileText size={24} /> Mock Tests Library
-                  </h1>
-                  <p style={{ fontSize: '0.85rem', color: '#6b7280', marginTop: '0.25rem' }}>Access and download Cambridge IELTS materials and audio tests.</p>
-                </div>
-                {userRole === 'trainer' && (
-                  <button style={{
-                    display: 'flex', alignItems: 'center', gap: '0.5rem',
-                    padding: '0.6rem 1.25rem', borderRadius: '0.5rem',
-                    backgroundColor: '#111827', color: 'white', border: 'none',
-                    fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer'
-                  }}>
-                    + Add Mock Test
-                  </button>
-                )}
-              </div>
-              <div style={{ height: 'calc(100vh - 200px)', width: '100%', borderRadius: '0.75rem', overflow: 'hidden', border: '1px solid #e5e7eb', backgroundColor: 'white' }}>
-                <iframe 
-                  src="/ielts-mock-test.html" 
-                  style={{ width: '100%', height: '100%', border: 'none' }}
-                  title="IELTS Mock Test Platform"
-                />
-              </div>
-            </div>
-          ) : activeTab === 'Practice Questions' ? (
+          {activeTab === 'Practice Questions' ? (
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '2rem' }}>
                 <div>
@@ -556,19 +568,21 @@ export default function Dashboard() {
                     <input
                       ref={practiceFileInputRef}
                       type="file"
+                      multiple
                       accept=".pdf,.mp3,.mpeg,.wav,.m4a"
                       style={{ display: 'none' }}
                       onChange={handleAddPracticeFile}
                     />
                     <button
                       onClick={() => practiceFileInputRef.current?.click()}
+                      disabled={isUploadingFiles}
                       style={{
                         display: 'flex', alignItems: 'center', gap: '0.5rem',
                         padding: '0.6rem 1.25rem', borderRadius: '0.5rem',
-                        backgroundColor: '#111827', color: 'white', border: 'none',
-                        fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer'
+                        backgroundColor: isUploadingFiles ? '#9ca3af' : '#111827', color: 'white', border: 'none',
+                        fontSize: '0.85rem', fontWeight: 600, cursor: isUploadingFiles ? 'not-allowed' : 'pointer'
                       }}>
-                      + Add Practice Test
+                      {isUploadingFiles ? 'Uploading...' : '+ Add Practice Test'}
                     </button>
                   </>
                 )}
@@ -576,38 +590,40 @@ export default function Dashboard() {
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1rem' }}>
                 {practiceQuestionsFiles.map((file, i) => <div key={`static-practice-${i}-${file.name}`}>{renderFileCard(file)}</div>)}
                 {extraPracticeFiles.map((file, i) => <div key={`extra-practice-${i}-${file.name}`}>{renderFileCard(
-                  { name: file.name, sizeBytes: file.sizeBytes, type: file.type },
-                  () => handleDeleteExtraFile(file.name, 'practice')
+                  { name: file.name, sizeBytes: file.sizeBytes, type: file.type, url: file.url },
+                  () => handleDeleteExtraFile(file, 'practice')
                 )}</div>)}
               </div>
             </div>
-          ) : activeTab === 'Study Roadmap' ? (
+          ) : activeTab === 'Test' ? (
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '2rem' }}>
                 <div>
                   <h1 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#111827', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <Map size={24} /> Study Roadmap & Notes
+                    <FileText size={24} /> Test
                   </h1>
-                  <p style={{ fontSize: '0.85rem', color: '#6b7280', marginTop: '0.25rem' }}>Follow the general textbooks and academic texts for your study roadmap.</p>
+                  <p style={{ fontSize: '0.85rem', color: '#6b7280', marginTop: '0.25rem' }}>Access and download test materials.</p>
                 </div>
                 {userRole === 'trainer' && (
                   <>
                     <input
                       ref={roadmapFileInputRef}
                       type="file"
+                      multiple
                       accept=".pdf,.mp3,.mpeg,.wav,.m4a"
                       style={{ display: 'none' }}
                       onChange={handleAddRoadmapFile}
                     />
                     <button
                       onClick={() => roadmapFileInputRef.current?.click()}
+                      disabled={isUploadingFiles}
                       style={{
                         display: 'flex', alignItems: 'center', gap: '0.5rem',
                         padding: '0.6rem 1.25rem', borderRadius: '0.5rem',
-                        backgroundColor: '#111827', color: 'white', border: 'none',
-                        fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer'
+                        backgroundColor: isUploadingFiles ? '#9ca3af' : '#111827', color: 'white', border: 'none',
+                        fontSize: '0.85rem', fontWeight: 600, cursor: isUploadingFiles ? 'not-allowed' : 'pointer'
                       }}>
-                      + Add Roadmap Content
+                      {isUploadingFiles ? 'Uploading...' : '+ Add Roadmap Content'}
                     </button>
                   </>
                 )}
@@ -615,12 +631,12 @@ export default function Dashboard() {
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1rem' }}>
                 {studyRoadmapFiles.map((file, i) => <div key={`static-roadmap-${i}-${file.name}`}>{renderFileCard(file)}</div>)}
                 {extraRoadmapFiles.map((file, i) => <div key={`extra-roadmap-${i}-${file.name}`}>{renderFileCard(
-                  { name: file.name, sizeBytes: file.sizeBytes, type: file.type },
-                  () => handleDeleteExtraFile(file.name, 'roadmap')
+                  { name: file.name, sizeBytes: file.sizeBytes, type: file.type, url: file.url },
+                  () => handleDeleteExtraFile(file, 'roadmap')
                 )}</div>)}
               </div>
             </div>
-          ) : activeTab === 'Add Students' ? (
+          ) : activeTab === 'Add Students' && userRole === 'trainer' ? (
             /* ===== ADD STUDENTS VIEW ===== */
             <div>
               {/* Header */}
@@ -929,37 +945,170 @@ export default function Dashboard() {
             /* ===== DASHBOARD VIEW ===== */
             <div>
               {userRole === 'trainer' ? (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem', marginBottom: '1.5rem' }}>
-                  {[
-                    { title: 'Total Enrolled Students', count: `${studentsList.length} Students`, desc: 'Manage your active student roster and track their progress.', color: '#6366f1', bg: '#eef2ff', icon: UserPlus },
-                    { title: 'Pending Evaluations', count: '0 Reviews', desc: 'Speaking and Writing tests awaiting your feedback.', color: '#ef4444', bg: '#fef2f2', icon: FileText },
-                    { title: 'Active Content Library', count: `${mockTestFiles.length + practiceQuestionsFiles.length} Items`, desc: 'Manage your mock tests and practice materials.', color: '#10b981', bg: '#ecfdf5', icon: BookOpen }
-                  ].map((card) => {
-                    const CardIcon = card.icon;
-                    return (
-                      <div key={card.title} style={{
-                        backgroundColor: 'white',
-                        borderRadius: '0.75rem',
-                        padding: '1.25rem',
-                        border: '1px solid #e5e7eb'
-                      }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem' }}>
-                          <div style={{
-                            width: '40px', height: '40px', borderRadius: '0.5rem',
-                            backgroundColor: card.bg,
-                            display: 'flex', alignItems: 'center', justifyContent: 'center'
-                          }}>
-                            <CardIcon size={20} color={card.color} />
-                          </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', textAlign: 'center' }}>
+                    <div>
+                      <h2 style={{ fontSize: '2rem', fontWeight: 800, color: '#111827', margin: 0 }}>Trainer Overview</h2>
+                      <p style={{ color: '#6b7280', marginTop: '0.25rem', fontSize: '1rem' }}>Monitor your students, evaluations, and content library.</p>
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1.5rem' }}>
+                    {[
+                      { title: 'Total Enrolled Students', count: `${studentsList.length}`, subCount: 'Active Accounts', desc: 'Manage your active student roster and track their progress.', gradient: 'linear-gradient(135deg, #111827 0%, #1f2937 100%)', iconColor: '#6366f1', iconBg: 'rgba(99, 102, 241, 0.2)', icon: UserPlus, action: 'Add Students', actionText: 'View Students' },
+                      { title: 'Pending Evaluations', count: '0', subCount: 'Test Reviews', desc: 'Speaking and Writing tests awaiting your feedback.', gradient: 'linear-gradient(135deg, #b91c1c 0%, #7f1d1d 100%)', iconColor: '#fca5a5', iconBg: 'rgba(252, 165, 165, 0.2)', icon: FileText, action: 'Test History', actionText: 'View Tests' },
+                      { title: 'Active Content Library', count: `${extraPracticeFiles.length + extraRoadmapFiles.length}`, subCount: 'Total Materials', desc: 'Manage your practice materials and roadmaps.', gradient: 'linear-gradient(135deg, #047857 0%, #064e3b 100%)', iconColor: '#6ee7b7', iconBg: 'rgba(110, 231, 183, 0.2)', icon: BookOpen, action: 'Practice Questions', actionText: 'Manage Content' }
+                    ].map((card) => {
+                      const CardIcon = card.icon;
+                      return (
+                        <div key={card.title} style={{
+                          background: card.gradient, borderRadius: '1rem', padding: '1.5rem',
+                          display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
+                          boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+                          color: 'white'
+                        }}>
                           <div>
-                            <h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#111827' }}>{card.title}</h3>
-                            <p style={{ fontSize: '0.75rem', color: '#6b7280', fontWeight: 500 }}>{card.count}</p>
+                            <div style={{ display: 'flex', alignItems: 'center', marginBottom: '1.5rem', position: 'relative' }}>
+                              <div style={{ width: '52px', height: '52px', borderRadius: '1rem', backgroundColor: card.iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'absolute', left: 0 }}>
+                                <CardIcon size={26} color={card.iconColor} />
+                              </div>
+                              <div style={{ flex: 1, textAlign: 'center' }}>
+                                <h3 style={{ fontSize: '2.5rem', fontWeight: 800, margin: 0, lineHeight: 1 }}>{card.count}</h3>
+                                <p style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.7)', fontWeight: 600, margin: 0, marginTop: '0.25rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{card.subCount}</p>
+                              </div>
+                            </div>
+                            <h4 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '0.5rem' }}>{card.title}</h4>
+                            <p style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.7)', lineHeight: 1.5, marginBottom: '1.5rem' }}>{card.desc}</p>
+                          </div>
+                          <button 
+                            onClick={() => handleTabChange(card.action)}
+                            style={{ 
+                              width: '100%', padding: '0.85rem', borderRadius: '0.5rem', border: '1px solid rgba(255,255,255,0.1)', 
+                              backgroundColor: 'rgba(255,255,255,0.05)', color: 'white', fontWeight: 600, fontSize: '0.9rem', 
+                              cursor: 'pointer', transition: 'all 0.2s ease', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem'
+                            }}
+                            onMouseOver={(e) => { e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.15)'; }}
+                            onMouseOut={(e) => { e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.05)'; }}
+                          >
+                            {card.actionText} &rarr;
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Two Column Layout for Bottom Section */}
+                  <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1.5rem' }}>
+                    {/* Recent Students Table */}
+                    <div style={{ backgroundColor: 'white', borderRadius: '1rem', border: '1px solid #e5e7eb', overflow: 'hidden', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)' }}>
+                      <div style={{ padding: '1.5rem', borderBottom: '1px solid #e5e7eb', display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#f8fafc' }}>
+                        <h3 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#0f172a', margin: 0 }}>Recent Registrations</h3>
+                        <button onClick={() => handleTabChange('Add Students')} style={{ backgroundColor: '#eff6ff', color: '#4f46e5', border: 'none', padding: '0.4rem 1rem', borderRadius: '2rem', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer' }}>View All Directory</button>
+                      </div>
+                      {studentsList.length > 0 ? (
+                        <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                          <thead>
+                            <tr style={{ backgroundColor: 'white', borderBottom: '2px solid #f1f5f9' }}>
+                              <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Student Profile</th>
+                              <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Course Track</th>
+                              <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Account Status</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {[...studentsList].reverse().slice(0, 5).map((student, i) => (
+                              <tr key={i} style={{ borderBottom: i === 4 || i === studentsList.length - 1 ? 'none' : '1px solid #f1f5f9', transition: 'background-color 0.2s' }} onMouseOver={e => e.currentTarget.style.backgroundColor = '#f8fafc'} onMouseOut={e => e.currentTarget.style.backgroundColor = 'transparent'}>
+                                <td style={{ padding: '1.25rem 1.5rem' }}>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                                    <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%)', color: '#4338ca', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '1.1rem', boxShadow: 'inset 0 2px 4px rgba(255,255,255,0.5)' }}>
+                                      {student.name ? student.name.charAt(0).toUpperCase() : 'S'}
+                                    </div>
+                                    <div>
+                                      <p style={{ margin: 0, fontWeight: 700, color: '#0f172a', fontSize: '0.95rem' }}>{student.name}</p>
+                                      <p style={{ margin: 0, color: '#64748b', fontSize: '0.85rem', marginTop: '0.2rem' }}>{student.email || student.id}</p>
+                                    </div>
+                                  </div>
+                                </td>
+                                <td style={{ padding: '1.25rem 1.5rem' }}>
+                                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', padding: '0.4rem 0.75rem', borderRadius: '0.5rem', fontSize: '0.8rem', fontWeight: 600, backgroundColor: '#f1f5f9', color: '#475569', border: '1px solid #e2e8f0' }}>
+                                    <BookOpen size={14} /> {student.course || 'IELTS Academic'}
+                                  </span>
+                                </td>
+                                <td style={{ padding: '1.25rem 1.5rem' }}>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                    <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#10b981' }}></div>
+                                    <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#0f172a' }}>Active</span>
+                                  </div>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      ) : (
+                        <div style={{ padding: '5rem 2rem', textAlign: 'center', backgroundColor: 'white' }}>
+                          <div style={{ width: '64px', height: '64px', borderRadius: '50%', backgroundColor: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem auto' }}>
+                            <UserPlus size={32} color="#94a3b8" />
+                          </div>
+                          <h4 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#0f172a', margin: '0 0 0.5rem 0' }}>No Students Enrolled</h4>
+                          <p style={{ margin: '0 auto 2rem auto', color: '#64748b', fontSize: '0.95rem', maxWidth: '300px', lineHeight: 1.5 }}>Your roster is currently empty. Start by registering your first student.</p>
+                          <button onClick={() => handleTabChange('Add Students')} style={{ backgroundColor: '#0f172a', color: 'white', border: 'none', padding: '0.85rem 2rem', borderRadius: '0.75rem', fontWeight: 600, fontSize: '0.95rem', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '0.5rem', transition: 'transform 0.2s' }} onMouseOver={e => e.currentTarget.style.transform = 'scale(1.02)'} onMouseOut={e => e.currentTarget.style.transform = 'scale(1)'}>
+                            <UserPlus size={18} /> Register Student
+                          </button>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Quick Actions Panel */}
+                    <div style={{ backgroundColor: 'white', borderRadius: '1rem', border: '1px solid #e5e7eb', overflow: 'hidden', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)', display: 'flex', flexDirection: 'column' }}>
+                      <div style={{ padding: '1.5rem', borderBottom: '1px solid #e5e7eb', backgroundColor: '#f8fafc' }}>
+                        <h3 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#0f172a', margin: 0 }}>Student Engagement</h3>
+                      </div>
+                      <div style={{ padding: '1.5rem', flex: 1, display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                        <div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                            <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#475569' }}>Active Learners (Weekly)</span>
+                            <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#0f172a' }}>85%</span>
+                          </div>
+                          <div style={{ width: '100%', height: '8px', backgroundColor: '#f1f5f9', borderRadius: '999px', overflow: 'hidden' }}>
+                            <div style={{ width: '85%', height: '100%', backgroundColor: '#6366f1', borderRadius: '999px' }}></div>
                           </div>
                         </div>
-                        <p style={{ fontSize: '0.8rem', color: '#6b7280', lineHeight: 1.5 }}>{card.desc}</p>
+                        
+                        <div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                            <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#475569' }}>Avg. Assignment Completion</span>
+                            <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#0f172a' }}>72%</span>
+                          </div>
+                          <div style={{ width: '100%', height: '8px', backgroundColor: '#f1f5f9', borderRadius: '999px', overflow: 'hidden' }}>
+                            <div style={{ width: '72%', height: '100%', backgroundColor: '#10b981', borderRadius: '999px' }}></div>
+                          </div>
+                        </div>
+
+                        <div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                            <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#475569' }}>Live Class Attendance</span>
+                            <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#0f172a' }}>92%</span>
+                          </div>
+                          <div style={{ width: '100%', height: '8px', backgroundColor: '#f1f5f9', borderRadius: '999px', overflow: 'hidden' }}>
+                            <div style={{ width: '92%', height: '100%', backgroundColor: '#f59e0b', borderRadius: '999px' }}></div>
+                          </div>
+                        </div>
+
+                        <div style={{ marginTop: 'auto', paddingTop: '1.5rem', borderTop: '1px solid #f1f5f9' }}>
+                          <h4 style={{ fontSize: '0.85rem', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '1rem' }}>Quick Links</h4>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                            <button onClick={() => handleTabChange('Practice Questions')} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', width: '100%', padding: '0.75rem', backgroundColor: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '0.5rem', cursor: 'pointer', textAlign: 'left', transition: 'border-color 0.2s' }} onMouseOver={e => e.currentTarget.style.borderColor = '#cbd5e1'} onMouseOut={e => e.currentTarget.style.borderColor = '#e2e8f0'}>
+                              <BookOpen size={18} color="#6366f1" />
+                              <span style={{ fontWeight: 600, color: '#334155', fontSize: '0.9rem' }}>Upload New Content</span>
+                            </button>
+                            <button onClick={() => handleTabChange('Test')} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', width: '100%', padding: '0.75rem', backgroundColor: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '0.5rem', cursor: 'pointer', textAlign: 'left', transition: 'border-color 0.2s' }} onMouseOver={e => e.currentTarget.style.borderColor = '#cbd5e1'} onMouseOut={e => e.currentTarget.style.borderColor = '#e2e8f0'}>
+                              <FileText size={18} color="#10b981" />
+                              <span style={{ fontWeight: 600, color: '#334155', fontSize: '0.9rem' }}>Manage Test Library</span>
+                            </button>
+                          </div>
+                        </div>
                       </div>
-                    );
-                  })}
+                    </div>
+                  </div>
                 </div>
               ) : (
                 <>
@@ -974,7 +1123,7 @@ export default function Dashboard() {
                   {/* Primary Action Grid */}
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem', marginBottom: '2rem' }}>
                     {[
-                      { title: 'Full Mock Tests', value: `${mockTestFiles.length} Available`, color: '#6366f1', bg: '#eef2ff', icon: FileText },
+                      { title: 'Practice Materials', value: `${practiceQuestionsFiles.length} Available`, color: '#6366f1', bg: '#eef2ff', icon: FileText },
                       { title: 'Listening Audio', value: '45 Tracks', color: '#10b981', bg: '#ecfdf5', icon: Music },
                       { title: 'Speaking Prep', value: 'Live Rooms', color: '#f59e0b', bg: '#fffbeb', icon: Bot },
                       { title: 'Writing Reviews', value: '2 Pending', color: '#ec4899', bg: '#fdf2f8', icon: FileCheck }
