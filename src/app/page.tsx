@@ -82,6 +82,12 @@ export default function LoginPage() {
     }
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleLogin();
+    }
+  };
+
   return (
     <div style={{
       position: 'fixed',
@@ -127,7 +133,7 @@ export default function LoginPage() {
       }} />
 
       {/* Form Container */}
-      <div style={{
+      <div className="animate-fade-in" style={{
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
@@ -171,6 +177,7 @@ export default function LoginPage() {
                 type={selectedRole === 'Learner' ? 'text' : 'email'} 
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                onKeyDown={handleKeyDown}
                 placeholder={selectedRole === 'Learner' ? 'Enter your Student ID' : 'name@vectragroup.com'}
                 style={{
                   width: '100%',
@@ -208,6 +215,7 @@ export default function LoginPage() {
                 type={showPassword ? 'text' : 'password'} 
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                onKeyDown={handleKeyDown}
                 placeholder="........"
                 style={{
                   width: '100%',
@@ -266,6 +274,7 @@ export default function LoginPage() {
                 type="text" 
                 value={securityAnswer}
                 onChange={(e) => setSecurityAnswer(e.target.value)}
+                onKeyDown={handleKeyDown}
                 placeholder="?"
                 style={{
                   flex: '1',

@@ -4,7 +4,7 @@ import Image from 'next/image';
 import { 
   LayoutDashboard, FileText, HelpCircle, Map, Clock, 
   Bot, FileCheck, BookOpen, ChevronDown, Gift, 
-  BookA, BookType, Languages, UserPlus, X, Eye, EyeOff, Download, Play, Music, LogOut, Menu
+  BookA, BookType, Languages, UserPlus, X, Eye, EyeOff, Download, Play, Music, LogOut, Menu, Bell
 } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
@@ -26,6 +26,7 @@ export default function Dashboard() {
   const [hasPreviousScore, setHasPreviousScore] = useState('no');
   const [isScoreDropdownOpen, setIsScoreDropdownOpen] = useState(false);
   const [showModalPassword, setShowModalPassword] = useState(false);
+  const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
 
   const [newStudentFullName, setNewStudentFullName] = useState('');
   const [newStudentPhone, setNewStudentPhone] = useState('');
@@ -295,7 +296,7 @@ export default function Dashboard() {
     setOpenMenuFile(null);
   };
 
-  const handleLogout = async () => {
+  const confirmLogout = async () => {
     try {
       await supabase.auth.signOut();
     } finally {
@@ -303,12 +304,16 @@ export default function Dashboard() {
     }
   };
 
+  const handleLogoutClick = () => {
+    setIsLogoutModalOpen(true);
+  };
+
   const sidebarItems = [
     { name: 'Dashboard', icon: LayoutDashboard },
     ...(userRole === 'trainer' ? [{ name: 'Add Students', icon: UserPlus }] : []),
     { name: 'Practice Questions', icon: HelpCircle },
-    { name: 'Test', icon: FileText },
-    { name: 'Test History', icon: Clock },
+    { name: 'Resources', icon: FileText },
+    { name: 'Mock Test', icon: Clock },
     { name: 'AI Tutor', icon: Bot },
   ];
 
@@ -449,40 +454,43 @@ export default function Dashboard() {
           <Image src="/vfs_logo.png" alt="VFS Logo" width={320} height={80} style={{ objectFit: 'contain', filter: 'invert(1)' }} priority />
 
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-          <button
-            onClick={handleLogout}
-            style={{
-              display: 'flex', alignItems: 'center', gap: '0.5rem',
-              padding: '0.5rem 1rem', borderRadius: '999px',
-              backgroundColor: '#fef2f2', color: '#ef4444', border: '1px solid #fee2e2',
-              fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer',
-              transition: 'all 0.2s'
-            }}
-            onMouseOver={(e) => { e.currentTarget.style.backgroundColor = '#fee2e2'; e.currentTarget.style.borderColor = '#fca5a5'; }}
-            onMouseOut={(e) => { e.currentTarget.style.backgroundColor = '#fef2f2'; e.currentTarget.style.borderColor = '#fee2e2'; }}
-          >
-            <LogOut size={14} /> Log Out
-          </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
             <div style={{ textAlign: 'right' }}>
-              <div style={{ fontSize: '0.85rem', color: '#111827', fontWeight: 700 }}>
+              <div style={{ fontSize: '0.9rem', color: '#1e293b', fontWeight: 700 }}>
                 {userName}
               </div>
-              <div style={{ fontSize: '0.65rem', color: '#6b7280', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginTop: '0.1rem' }}>
+              <div style={{ fontSize: '0.65rem', color: '#64748b', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginTop: '0.1rem' }}>
                 {userRole === 'trainer' ? 'Tutor' : 'Student'}
               </div>
             </div>
             <div style={{ 
-              width: '36px', height: '36px', borderRadius: '50%', 
-              background: 'linear-gradient(135deg, #1f2937, #374151)', 
+              width: '38px', height: '38px', borderRadius: '50%', 
+              background: 'linear-gradient(135deg, #1e1b4b, #312e81)', 
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              color: 'white', fontWeight: 700, fontSize: '0.85rem', cursor: 'pointer',
-              boxShadow: '0 2px 5px rgba(0,0,0,0.1)'
+              color: 'white', fontWeight: 700, fontSize: '0.9rem', cursor: 'pointer',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
             }}>
-              {userName.charAt(0).toUpperCase()}
+              {userName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()}
             </div>
           </div>
+          
+          <div style={{ height: '24px', width: '1px', backgroundColor: '#e2e8f0' }}></div>
+
+          <button
+            onClick={handleLogoutClick}
+            style={{
+              display: 'flex', alignItems: 'center', gap: '0.5rem',
+              padding: '0.5rem 1rem', borderRadius: '999px',
+              backgroundColor: 'white', color: '#475569', border: '1px solid #e2e8f0',
+              fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer',
+              transition: 'all 0.2s', boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
+            }}
+            onMouseOver={(e) => { e.currentTarget.style.backgroundColor = '#f8fafc'; e.currentTarget.style.borderColor = '#cbd5e1'; }}
+            onMouseOut={(e) => { e.currentTarget.style.backgroundColor = 'white'; e.currentTarget.style.borderColor = '#e2e8f0'; }}
+          >
+            <LogOut size={16} /> Logout
+          </button>
         </div>
       </header>
 
@@ -548,12 +556,12 @@ export default function Dashboard() {
         )}
 
         {/* Main Content */}
-        <main style={{ 
+        <main className="animate-tab-content" style={{ 
           flex: 1, 
           padding: '1.5rem 2rem', 
           overflowY: 'auto',
           backgroundColor: '#f5f6fa'
-        }}>
+        }} key={activeTab}>
           {activeTab === 'Practice Questions' ? (
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '2rem' }}>
@@ -595,12 +603,12 @@ export default function Dashboard() {
                 )}</div>)}
               </div>
             </div>
-          ) : activeTab === 'Test' ? (
+          ) : activeTab === 'Resources' ? (
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '2rem' }}>
                 <div>
                   <h1 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#111827', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <FileText size={24} /> Test
+                    <FileText size={24} /> Resources
                   </h1>
                   <p style={{ fontSize: '0.85rem', color: '#6b7280', marginTop: '0.25rem' }}>Access and download test materials.</p>
                 </div>
@@ -634,6 +642,20 @@ export default function Dashboard() {
                   { name: file.name, sizeBytes: file.sizeBytes, type: file.type, url: file.url },
                   () => handleDeleteExtraFile(file, 'roadmap')
                 )}</div>)}
+              </div>
+            </div>
+          ) : activeTab === 'Mock Test' ? (
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '2rem' }}>
+                <div>
+                  <h1 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#111827', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <Clock size={24} /> Mock Test
+                  </h1>
+                  <p style={{ fontSize: '0.85rem', color: '#6b7280', marginTop: '0.25rem' }}>View and manage your mock tests.</p>
+                </div>
+              </div>
+              <div style={{ padding: '4rem 2rem', textAlign: 'center', backgroundColor: 'white', borderRadius: '1rem', border: '1px solid #e5e7eb' }}>
+                <p style={{ color: '#64748b' }}>Mock Test section content will be added here.</p>
               </div>
             </div>
           ) : activeTab === 'Add Students' && userRole === 'trainer' ? (
@@ -956,8 +978,8 @@ export default function Dashboard() {
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1.5rem' }}>
                     {[
                       { title: 'Total Enrolled Students', count: `${studentsList.length}`, subCount: 'Active Accounts', desc: 'Manage your active student roster and track their progress.', gradient: 'linear-gradient(135deg, #111827 0%, #1f2937 100%)', iconColor: '#6366f1', iconBg: 'rgba(99, 102, 241, 0.2)', icon: UserPlus, action: 'Add Students', actionText: 'View Students' },
-                      { title: 'Pending Evaluations', count: '0', subCount: 'Test Reviews', desc: 'Speaking and Writing tests awaiting your feedback.', gradient: 'linear-gradient(135deg, #b91c1c 0%, #7f1d1d 100%)', iconColor: '#fca5a5', iconBg: 'rgba(252, 165, 165, 0.2)', icon: FileText, action: 'Test History', actionText: 'View Tests' },
-                      { title: 'Active Content Library', count: `${extraPracticeFiles.length + extraRoadmapFiles.length}`, subCount: 'Total Materials', desc: 'Manage your practice materials and roadmaps.', gradient: 'linear-gradient(135deg, #047857 0%, #064e3b 100%)', iconColor: '#6ee7b7', iconBg: 'rgba(110, 231, 183, 0.2)', icon: BookOpen, action: 'Practice Questions', actionText: 'Manage Content' }
+                      { title: 'Pending Mock Tests', count: '0', subCount: 'Test Reviews', desc: 'Speaking and Writing tests awaiting your feedback.', gradient: 'linear-gradient(135deg, #b91c1c 0%, #7f1d1d 100%)', iconColor: '#fca5a5', iconBg: 'rgba(252, 165, 165, 0.2)', icon: FileText, action: 'Mock Test', actionText: 'Review Mock Tests' },
+                      { title: 'Active Content Library', count: `${extraPracticeFiles.length + extraRoadmapFiles.length}`, subCount: 'Total Materials', desc: 'Manage your practice materials and resources.', gradient: 'linear-gradient(135deg, #047857 0%, #064e3b 100%)', iconColor: '#6ee7b7', iconBg: 'rgba(110, 231, 183, 0.2)', icon: BookOpen, action: 'Resources', actionText: 'Manage Resources' }
                     ].map((card) => {
                       const CardIcon = card.icon;
                       return (
@@ -1000,109 +1022,115 @@ export default function Dashboard() {
                   {/* Two Column Layout for Bottom Section */}
                   <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1.5rem' }}>
                     {/* Recent Students Table */}
-                    <div style={{ backgroundColor: 'white', borderRadius: '1rem', border: '1px solid #e5e7eb', overflow: 'hidden', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)' }}>
-                      <div style={{ padding: '1.5rem', borderBottom: '1px solid #e5e7eb', display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#f8fafc' }}>
-                        <h3 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#0f172a', margin: 0 }}>Recent Registrations</h3>
-                        <button onClick={() => handleTabChange('Add Students')} style={{ backgroundColor: '#eff6ff', color: '#4f46e5', border: 'none', padding: '0.4rem 1rem', borderRadius: '2rem', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer' }}>View All Directory</button>
+                    <div style={{ backgroundColor: 'white', borderRadius: '1rem', border: '1px solid #e5e7eb', overflow: 'hidden', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)' }}>
+                      <div style={{ padding: '1.25rem 1.5rem', borderBottom: '1px solid #f3f4f6', display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#ffffff' }}>
+                        <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#111827', margin: 0, letterSpacing: '-0.025em' }}>Recent Registrations</h3>
+                        <button onClick={() => handleTabChange('Add Students')} style={{ backgroundColor: '#f8fafc', color: '#475569', border: '1px solid #e2e8f0', padding: '0.4rem 1rem', borderRadius: '999px', fontWeight: 600, fontSize: '0.75rem', cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }} onMouseOver={e => { e.currentTarget.style.backgroundColor = '#f1f5f9'; e.currentTarget.style.color = '#0f172a'; }} onMouseOut={e => { e.currentTarget.style.backgroundColor = '#f8fafc'; e.currentTarget.style.color = '#475569'; }}>View All Directory &rarr;</button>
                       </div>
                       {studentsList.length > 0 ? (
-                        <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-                          <thead>
-                            <tr style={{ backgroundColor: 'white', borderBottom: '2px solid #f1f5f9' }}>
-                              <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Student Profile</th>
-                              <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Course Track</th>
-                              <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Account Status</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {[...studentsList].reverse().slice(0, 5).map((student, i) => (
-                              <tr key={i} style={{ borderBottom: i === 4 || i === studentsList.length - 1 ? 'none' : '1px solid #f1f5f9', transition: 'background-color 0.2s' }} onMouseOver={e => e.currentTarget.style.backgroundColor = '#f8fafc'} onMouseOut={e => e.currentTarget.style.backgroundColor = 'transparent'}>
-                                <td style={{ padding: '1.25rem 1.5rem' }}>
-                                  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                                    <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%)', color: '#4338ca', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '1.1rem', boxShadow: 'inset 0 2px 4px rgba(255,255,255,0.5)' }}>
-                                      {student.name ? student.name.charAt(0).toUpperCase() : 'S'}
-                                    </div>
-                                    <div>
-                                      <p style={{ margin: 0, fontWeight: 700, color: '#0f172a', fontSize: '0.95rem' }}>{student.name}</p>
-                                      <p style={{ margin: 0, color: '#64748b', fontSize: '0.85rem', marginTop: '0.2rem' }}>{student.email || student.id}</p>
-                                    </div>
-                                  </div>
-                                </td>
-                                <td style={{ padding: '1.25rem 1.5rem' }}>
-                                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', padding: '0.4rem 0.75rem', borderRadius: '0.5rem', fontSize: '0.8rem', fontWeight: 600, backgroundColor: '#f1f5f9', color: '#475569', border: '1px solid #e2e8f0' }}>
-                                    <BookOpen size={14} /> {student.course || 'IELTS Academic'}
-                                  </span>
-                                </td>
-                                <td style={{ padding: '1.25rem 1.5rem' }}>
-                                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                    <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#10b981' }}></div>
-                                    <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#0f172a' }}>Active</span>
-                                  </div>
-                                </td>
+                        <div style={{ overflowX: 'auto' }}>
+                          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                            <thead>
+                              <tr style={{ backgroundColor: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
+                                <th style={{ padding: '1rem 1.5rem', fontSize: '0.7rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Student Profile</th>
+                                <th style={{ padding: '1rem 1.5rem', fontSize: '0.7rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Course Track</th>
+                                <th style={{ padding: '1rem 1.5rem', fontSize: '0.7rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Status</th>
+                                <th style={{ padding: '1rem 1.5rem', fontSize: '0.7rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'right' }}>Action</th>
                               </tr>
-                            ))}
-                          </tbody>
-                        </table>
+                            </thead>
+                            <tbody>
+                              {[...studentsList].reverse().slice(0, 5).map((student, i) => (
+                                <tr key={i} style={{ borderBottom: i === 4 || i === studentsList.length - 1 ? 'none' : '1px solid #f1f5f9', transition: 'background-color 0.2s, transform 0.1s' }} onMouseOver={e => { e.currentTarget.style.backgroundColor = '#f8fafc'; }} onMouseOut={e => { e.currentTarget.style.backgroundColor = 'transparent'; }}>
+                                  <td style={{ padding: '1rem 1.5rem' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                                      <div style={{ width: '38px', height: '38px', borderRadius: '50%', background: 'linear-gradient(135deg, #1e1b4b 0%, #4338ca 100%)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '1rem', boxShadow: '0 2px 4px rgba(67, 56, 202, 0.2)' }}>
+                                        {student.name ? student.name.charAt(0).toUpperCase() : 'S'}
+                                      </div>
+                                      <div>
+                                        <p style={{ margin: 0, fontWeight: 700, color: '#1e293b', fontSize: '0.9rem' }}>{student.name}</p>
+                                        <p style={{ margin: 0, color: '#64748b', fontSize: '0.75rem', marginTop: '0.1rem' }}>{student.email || student.id}</p>
+                                      </div>
+                                    </div>
+                                  </td>
+                                  <td style={{ padding: '1rem 1.5rem' }}>
+                                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', padding: '0.3rem 0.6rem', borderRadius: '999px', fontSize: '0.75rem', fontWeight: 600, backgroundColor: '#f1f5f9', color: '#475569', border: '1px solid #e2e8f0' }}>
+                                      <BookOpen size={12} /> {student.course || 'IELTS Academic'}
+                                    </span>
+                                  </td>
+                                  <td style={{ padding: '1rem 1.5rem' }}>
+                                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', padding: '0.3rem 0.6rem', borderRadius: '999px', backgroundColor: '#ecfdf5', border: '1px solid #d1fae5' }}>
+                                      <div style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#10b981' }}></div>
+                                      <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#065f46' }}>Active</span>
+                                    </div>
+                                  </td>
+                                  <td style={{ padding: '1rem 1.5rem', textAlign: 'right' }}>
+                                    <button onClick={() => handleTabChange('Add Students')} style={{ background: 'none', border: 'none', color: '#6366f1', fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer', padding: '0.4rem', borderRadius: '0.25rem' }} onMouseOver={e => e.currentTarget.style.backgroundColor = '#e0e7ff'} onMouseOut={e => e.currentTarget.style.backgroundColor = 'transparent'}>
+                                      View
+                                    </button>
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
                       ) : (
-                        <div style={{ padding: '5rem 2rem', textAlign: 'center', backgroundColor: 'white' }}>
-                          <div style={{ width: '64px', height: '64px', borderRadius: '50%', backgroundColor: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem auto' }}>
-                            <UserPlus size={32} color="#94a3b8" />
+                        <div style={{ padding: '4rem 2rem', textAlign: 'center', backgroundColor: 'white' }}>
+                          <div style={{ width: '56px', height: '56px', borderRadius: '50%', backgroundColor: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.25rem auto' }}>
+                            <UserPlus size={28} color="#94a3b8" />
                           </div>
-                          <h4 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#0f172a', margin: '0 0 0.5rem 0' }}>No Students Enrolled</h4>
-                          <p style={{ margin: '0 auto 2rem auto', color: '#64748b', fontSize: '0.95rem', maxWidth: '300px', lineHeight: 1.5 }}>Your roster is currently empty. Start by registering your first student.</p>
-                          <button onClick={() => handleTabChange('Add Students')} style={{ backgroundColor: '#0f172a', color: 'white', border: 'none', padding: '0.85rem 2rem', borderRadius: '0.75rem', fontWeight: 600, fontSize: '0.95rem', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '0.5rem', transition: 'transform 0.2s' }} onMouseOver={e => e.currentTarget.style.transform = 'scale(1.02)'} onMouseOut={e => e.currentTarget.style.transform = 'scale(1)'}>
-                            <UserPlus size={18} /> Register Student
+                          <h4 style={{ fontSize: '1.15rem', fontWeight: 700, color: '#1e293b', margin: '0 0 0.5rem 0' }}>No Students Enrolled</h4>
+                          <p style={{ margin: '0 auto 1.5rem auto', color: '#64748b', fontSize: '0.85rem', maxWidth: '280px', lineHeight: 1.5 }}>Your roster is currently empty. Start by registering your first student.</p>
+                          <button onClick={() => handleTabChange('Add Students')} style={{ backgroundColor: '#0f172a', color: 'white', border: 'none', padding: '0.6rem 1.5rem', borderRadius: '0.5rem', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '0.5rem', transition: 'transform 0.2s', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }} onMouseOver={e => e.currentTarget.style.transform = 'translateY(-1px)'} onMouseOut={e => e.currentTarget.style.transform = 'none'}>
+                            <UserPlus size={16} /> Register Student
                           </button>
                         </div>
                       )}
                     </div>
 
                     {/* Quick Actions Panel */}
-                    <div style={{ backgroundColor: 'white', borderRadius: '1rem', border: '1px solid #e5e7eb', overflow: 'hidden', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)', display: 'flex', flexDirection: 'column' }}>
-                      <div style={{ padding: '1.5rem', borderBottom: '1px solid #e5e7eb', backgroundColor: '#f8fafc' }}>
-                        <h3 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#0f172a', margin: 0 }}>Student Engagement</h3>
+                    <div style={{ backgroundColor: 'white', borderRadius: '1rem', border: '1px solid #e5e7eb', overflow: 'hidden', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)', display: 'flex', flexDirection: 'column' }}>
+                      <div style={{ padding: '1.25rem 1.5rem', borderBottom: '1px solid #f3f4f6', backgroundColor: '#ffffff' }}>
+                        <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#111827', margin: 0, letterSpacing: '-0.025em' }}>Student Engagement</h3>
                       </div>
                       <div style={{ padding: '1.5rem', flex: 1, display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
                         <div>
                           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                            <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#475569' }}>Active Learners (Weekly)</span>
-                            <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#0f172a' }}>85%</span>
+                            <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Active Learners (Weekly)</span>
+                            <span style={{ fontSize: '0.85rem', fontWeight: 800, color: '#1e293b' }}>85%</span>
                           </div>
-                          <div style={{ width: '100%', height: '8px', backgroundColor: '#f1f5f9', borderRadius: '999px', overflow: 'hidden' }}>
-                            <div style={{ width: '85%', height: '100%', backgroundColor: '#6366f1', borderRadius: '999px' }}></div>
+                          <div style={{ width: '100%', height: '6px', backgroundColor: '#f1f5f9', borderRadius: '999px', overflow: 'hidden' }}>
+                            <div style={{ width: '85%', height: '100%', background: 'linear-gradient(90deg, #6366f1, #8b5cf6)', borderRadius: '999px', boxShadow: '0 0 10px rgba(99, 102, 241, 0.5)' }}></div>
                           </div>
                         </div>
                         
                         <div>
                           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                            <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#475569' }}>Avg. Assignment Completion</span>
-                            <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#0f172a' }}>72%</span>
+                            <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Avg. Assignment Completion</span>
+                            <span style={{ fontSize: '0.85rem', fontWeight: 800, color: '#1e293b' }}>72%</span>
                           </div>
-                          <div style={{ width: '100%', height: '8px', backgroundColor: '#f1f5f9', borderRadius: '999px', overflow: 'hidden' }}>
-                            <div style={{ width: '72%', height: '100%', backgroundColor: '#10b981', borderRadius: '999px' }}></div>
+                          <div style={{ width: '100%', height: '6px', backgroundColor: '#f1f5f9', borderRadius: '999px', overflow: 'hidden' }}>
+                            <div style={{ width: '72%', height: '100%', background: 'linear-gradient(90deg, #10b981, #34d399)', borderRadius: '999px', boxShadow: '0 0 10px rgba(16, 185, 129, 0.5)' }}></div>
                           </div>
                         </div>
 
                         <div>
                           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                            <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#475569' }}>Live Class Attendance</span>
-                            <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#0f172a' }}>92%</span>
+                            <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Live Class Attendance</span>
+                            <span style={{ fontSize: '0.85rem', fontWeight: 800, color: '#1e293b' }}>92%</span>
                           </div>
-                          <div style={{ width: '100%', height: '8px', backgroundColor: '#f1f5f9', borderRadius: '999px', overflow: 'hidden' }}>
-                            <div style={{ width: '92%', height: '100%', backgroundColor: '#f59e0b', borderRadius: '999px' }}></div>
+                          <div style={{ width: '100%', height: '6px', backgroundColor: '#f1f5f9', borderRadius: '999px', overflow: 'hidden' }}>
+                            <div style={{ width: '92%', height: '100%', background: 'linear-gradient(90deg, #f59e0b, #fbbf24)', borderRadius: '999px', boxShadow: '0 0 10px rgba(245, 158, 11, 0.5)' }}></div>
                           </div>
                         </div>
 
                         <div style={{ marginTop: 'auto', paddingTop: '1.5rem', borderTop: '1px solid #f1f5f9' }}>
-                          <h4 style={{ fontSize: '0.85rem', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '1rem' }}>Quick Links</h4>
+                          <h4 style={{ fontSize: '0.75rem', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 1rem 0' }}>Quick Actions</h4>
                           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                            <button onClick={() => handleTabChange('Practice Questions')} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', width: '100%', padding: '0.75rem', backgroundColor: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '0.5rem', cursor: 'pointer', textAlign: 'left', transition: 'border-color 0.2s' }} onMouseOver={e => e.currentTarget.style.borderColor = '#cbd5e1'} onMouseOut={e => e.currentTarget.style.borderColor = '#e2e8f0'}>
-                              <BookOpen size={18} color="#6366f1" />
-                              <span style={{ fontWeight: 600, color: '#334155', fontSize: '0.9rem' }}>Upload New Content</span>
+                            <button onClick={() => handleTabChange('Resources')} style={{ width: '100%', padding: '0.75rem 1rem', display: 'flex', alignItems: 'center', gap: '0.75rem', border: '1px solid #e2e8f0', borderRadius: '0.5rem', backgroundColor: '#f8fafc', color: '#334155', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer', transition: 'all 0.2s' }} onMouseOver={e => { e.currentTarget.style.backgroundColor = '#f1f5f9'; e.currentTarget.style.borderColor = '#cbd5e1'; }} onMouseOut={e => { e.currentTarget.style.backgroundColor = '#f8fafc'; e.currentTarget.style.borderColor = '#e2e8f0'; }}>
+                              <BookOpen size={16} color="#6366f1" /> Upload New Content
                             </button>
-                            <button onClick={() => handleTabChange('Test')} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', width: '100%', padding: '0.75rem', backgroundColor: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '0.5rem', cursor: 'pointer', textAlign: 'left', transition: 'border-color 0.2s' }} onMouseOver={e => e.currentTarget.style.borderColor = '#cbd5e1'} onMouseOut={e => e.currentTarget.style.borderColor = '#e2e8f0'}>
-                              <FileText size={18} color="#10b981" />
-                              <span style={{ fontWeight: 600, color: '#334155', fontSize: '0.9rem' }}>Manage Test Library</span>
+                            <button onClick={() => handleTabChange('Mock Test')} style={{ width: '100%', padding: '0.75rem 1rem', display: 'flex', alignItems: 'center', gap: '0.75rem', border: '1px solid #e2e8f0', borderRadius: '0.5rem', backgroundColor: '#f8fafc', color: '#334155', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer', transition: 'all 0.2s' }} onMouseOver={e => { e.currentTarget.style.backgroundColor = '#f1f5f9'; e.currentTarget.style.borderColor = '#cbd5e1'; }} onMouseOut={e => { e.currentTarget.style.backgroundColor = '#f8fafc'; e.currentTarget.style.borderColor = '#e2e8f0'; }}>
+                              <FileText size={16} color="#10b981" /> Review Mock Tests
                             </button>
                           </div>
                         </div>
@@ -1486,6 +1514,68 @@ export default function Dashboard() {
                 }}
                 style={{ padding: '0.6rem 1.25rem', borderRadius: '0.5rem', border: 'none', backgroundColor: '#111827', color: 'white', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer' }}
               >Save Changes</button>
+            </div>
+          </div>
+        </div>
+      )}
+      {isLogoutModalOpen && (
+        <div className="animate-modal-backdrop" style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.4)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          zIndex: 9999, backdropFilter: 'blur(2px)'
+        }}>
+          <div className="animate-modal-content" style={{
+            backgroundColor: 'white',
+            borderRadius: '1rem',
+            width: '100%',
+            maxWidth: '500px',
+            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+            overflow: 'hidden'
+          }}>
+            {/* Header */}
+            <div style={{ padding: '1.5rem', borderBottom: '1px solid #f3f4f6', position: 'relative' }}>
+              <button 
+                onClick={() => setIsLogoutModalOpen(false)}
+                style={{ position: 'absolute', right: '1.5rem', top: '1.5rem', background: 'none', border: 'none', cursor: 'pointer', color: '#9ca3af' }}
+              >
+                <X size={20} />
+              </button>
+              <h2 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#111827', margin: 0, letterSpacing: '-0.025em' }}>Sign Out</h2>
+              <p style={{ fontSize: '0.9rem', color: '#6b7280', fontWeight: 600, marginTop: '0.25rem' }}>Confirm your request to leave</p>
+            </div>
+            {/* Body */}
+            <div style={{ padding: '2rem 1.5rem', backgroundColor: 'white' }}>
+              <p style={{ fontSize: '1rem', color: '#374151', fontWeight: 600, margin: 0, lineHeight: 1.6 }}>
+                Are you sure you want to sign out of your account? You will need to log back in to access your dashboard.
+              </p>
+            </div>
+            {/* Footer */}
+            <div style={{ padding: '1.25rem 1.5rem', display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
+              <button
+                onClick={() => setIsLogoutModalOpen(false)}
+                style={{
+                  padding: '0.6rem 1.5rem', borderRadius: '0.5rem', backgroundColor: 'white',
+                  border: '1px solid #d1d5db', color: '#374151', fontSize: '0.9rem', fontWeight: 700,
+                  cursor: 'pointer', transition: 'all 0.2s'
+                }}
+                onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f9fafb'}
+                onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'white'}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmLogout}
+                style={{
+                  padding: '0.6rem 1.5rem', borderRadius: '0.5rem', backgroundColor: '#0f172a',
+                  border: 'none', color: 'white', fontSize: '0.9rem', fontWeight: 700,
+                  cursor: 'pointer', transition: 'all 0.2s'
+                }}
+                onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#1e293b'}
+                onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#0f172a'}
+              >
+                Sign Out
+              </button>
             </div>
           </div>
         </div>
