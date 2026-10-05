@@ -79,7 +79,7 @@ export default function LoginPage() {
       localStorage.setItem('dev_mock_role', actualRole.toLowerCase());
       localStorage.setItem('dev_mock_name', data?.user?.user_metadata?.full_name || email.split('@')[0]);
       localStorage.setItem('activeTab', 'Dashboard'); // Always start on Dashboard after login
-      router.push('/dashboard');
+      router.replace('/dashboard');
     }
   };
 

@@ -99,18 +99,28 @@ export default function Dashboard() {
         const { data: { user } } = await supabase.auth.getUser();
         if (user) {
           const role = user.email === 'trainer@vectragroup.com' ? 'trainer' : (user.user_metadata?.role || 'learner');
+          // Store in localStorage so it's in sync
+          localStorage.setItem('dev_mock_role', role);
+          localStorage.setItem('dev_mock_name', user.user_metadata?.full_name || user.email?.split('@')[0] || 'Learner');
           setUserRole(role);
           setUserName(user.user_metadata?.full_name || user.email?.split('@')[0] || 'Learner');
         } else {
-          const mockRole = localStorage.getItem('dev_mock_role');
-          const mockName = localStorage.getItem('dev_mock_name');
-          if (mockRole) setUserRole(mockRole);
-          if (mockName) setUserName(mockName);
+          // No active Supabase session — clear stale cache and force login
+          localStorage.removeItem('dev_mock_role');
+          localStorage.removeItem('dev_mock_name');
+          localStorage.removeItem('activeTab');
+          router.replace('/');
+          return;
         }
       } catch (e) {
+        // Network error — fall back to localStorage cache
         const mockRole = localStorage.getItem('dev_mock_role');
         const mockName = localStorage.getItem('dev_mock_name');
         if (mockRole) setUserRole(mockRole);
+        else {
+          router.replace('/');
+          return;
+        }
         if (mockName) setUserName(mockName);
       } finally {
         setIsLoading(false);
