@@ -163,13 +163,13 @@ export default function Dashboard() {
 
     // ===== SUPABASE REALTIME SUBSCRIPTIONS =====
     const studentsSubscription = supabase.channel('realtime:students')
-      .on('postgres', { event: '*', schema: 'public', table: 'students' }, () => {
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'students' }, () => {
         fetchStudents();
       })
       .subscribe();
 
     const materialsSubscription = supabase.channel('realtime:study_materials')
-      .on('postgres', { event: '*', schema: 'public', table: 'study_materials' }, () => {
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'study_materials' }, () => {
         fetchMaterials();
       })
       .subscribe();
