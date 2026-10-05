@@ -246,7 +246,7 @@ export default function Dashboard() {
         }
       });
 
-      if (signUpError) {
+      if (signUpError && !signUpError.message.toLowerCase().includes('already registered')) {
         alert(`Supabase Error: ${signUpError.message}`);
         setIsCreatingStudent(false);
         return;
