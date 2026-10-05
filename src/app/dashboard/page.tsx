@@ -750,7 +750,7 @@ export default function Dashboard() {
                       `}</style>
                       <h2 style={{ color: '#1e293b', fontSize: '1.75rem', fontWeight: 800, margin: '0 0 0.5rem 0', textAlign: 'center' }}>Test Completed!</h2>
                       <p style={{ color: '#64748b', fontSize: '1rem', margin: '0 0 2.5rem 0', textAlign: 'center' }}>Here is your final evaluation.</p>
-                      
+
                       <div style={{ width: '160px', height: '160px', borderRadius: '1.5rem', backgroundColor: '#f0f9ff', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', marginBottom: '2rem', border: '2px solid #bae6fd' }}>
                         <span style={{ color: '#3b82f6', fontSize: '0.85rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.5rem' }}>Total Score</span>
                         <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.25rem' }}>
@@ -771,7 +771,7 @@ export default function Dashboard() {
                           <span style={{ color: '#ef4444', fontSize: '0.8rem', fontWeight: 700, textTransform: 'uppercase', marginTop: '0.25rem' }}>Incorrect</span>
                         </div>
                       </div>
-                      
+
                       <button
                         onClick={() => setShowResultsScreen(false)}
                         style={{ backgroundColor: '#6366f1', color: 'white', border: 'none', padding: '1rem 2.5rem', borderRadius: '0.75rem', fontSize: '1.1rem', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s', width: '100%', boxShadow: '0 4px 14px 0 rgba(99,102,241,0.39)' }}
@@ -784,147 +784,147 @@ export default function Dashboard() {
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', flex: 1 }}>
                     {/* Left pane: Text */}
                     <div style={{ padding: '2.5rem', borderRight: '1px solid #e2e8f0', overflowY: 'auto' }}>
-                    <p style={{ color: '#64748b', fontSize: '0.9rem', marginBottom: '1.5rem', lineHeight: 1.5, fontWeight: 500 }}>
-                      {mockQuestions[currentMockQuestionIndex].prompt}
-                    </p>
-                    {mockQuestions[currentMockQuestionIndex].text.split('\n\n').map((paragraph, i) => (
-                      <p key={i} style={{ fontSize: '1.05rem', lineHeight: 1.7, marginBottom: '1.5rem', color: '#334155' }}>
-                        {paragraph}
+                      <p style={{ color: '#64748b', fontSize: '0.9rem', marginBottom: '1.5rem', lineHeight: 1.5, fontWeight: 500 }}>
+                        {mockQuestions[currentMockQuestionIndex].prompt}
                       </p>
-                    ))}
-                  </div>
-
-                  {/* Right pane: Questions */}
-                  <div style={{ padding: '2.5rem', display: 'flex', flexDirection: 'column', backgroundColor: '#f8fafc' }}>
-                    <h4 style={{ fontSize: '1.15rem', fontWeight: 700, color: '#0f172a', marginBottom: '1.5rem', lineHeight: 1.5 }}>
-                      {mockQuestions[currentMockQuestionIndex].question}
-                    </h4>
-
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', flex: 1 }}>
-                      {mockQuestions[currentMockQuestionIndex].options.map((opt, idx) => {
-                        const isSelected = mockAnswers[currentMockQuestionIndex].includes(idx);
-                        const isCorrect = mockQuestions[currentMockQuestionIndex].correctOptions.includes(idx);
-                        let borderStyle = '1px solid #cbd5e1';
-                        let bgStyle = isSelected ? '#f0f9ff' : 'white';
-                        let textColor = isSelected ? '#0f172a' : '#475569';
-                        
-                        if (isSelected) borderStyle = '1px solid #3b82f6';
-
-                        if (isMockSubmitted) {
-                          if (isCorrect) {
-                            borderStyle = '1px solid #10b981'; // Green
-                            bgStyle = isSelected ? '#ecfdf5' : '#f0fdf4';
-                            textColor = '#065f46';
-                          } else if (isSelected && !isCorrect) {
-                            borderStyle = '1px solid #ef4444'; // Red
-                            bgStyle = '#fef2f2';
-                            textColor = '#991b1b';
-                          }
-                        }
-
-                        return (
-                          <button
-                            key={idx}
-                            onClick={() => {
-                              if (isMockSubmitted) return;
-                              setMockAnswers(prev => {
-                                const newAnswers = [...prev];
-                                newAnswers[currentMockQuestionIndex] = [idx];
-                                return newAnswers;
-                              });
-                            }}
-                            style={{
-                              display: 'flex', alignItems: 'center', gap: '1rem', padding: '1.25rem 1.5rem',
-                              borderRadius: '0.75rem', backgroundColor: bgStyle, border: borderStyle,
-                              color: textColor, cursor: isMockSubmitted ? 'default' : 'pointer', textAlign: 'left',
-                              transition: 'all 0.2s ease',
-                              outline: 'none',
-                              boxShadow: isSelected && !isMockSubmitted ? '0 4px 14px -4px rgba(59, 130, 246, 0.3)' : '0 1px 2px 0 rgba(0, 0, 0, 0.05)'
-                            }}
-                            onMouseOver={e => {
-                              if (!isMockSubmitted) {
-                                e.currentTarget.style.backgroundColor = isSelected ? '#f0f9ff' : '#f8fafc';
-                                if (!isSelected) e.currentTarget.style.border = '1px solid #94a3b8';
-                              }
-                            }}
-                            onMouseOut={e => {
-                              if (!isMockSubmitted) {
-                                e.currentTarget.style.backgroundColor = isSelected ? '#f0f9ff' : 'white';
-                                if (!isSelected) e.currentTarget.style.border = '1px solid #cbd5e1';
-                              }
-                            }}
-                          >
-                            <div style={{ width: '24px', height: '24px', border: `2px solid ${isMockSubmitted && isCorrect ? '#10b981' : (isMockSubmitted && isSelected && !isCorrect) ? '#ef4444' : isSelected ? '#3b82f6' : '#cbd5e1'}`, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: isSelected && !isMockSubmitted ? '#3b82f6' : 'transparent', flexShrink: 0, transition: 'all 0.2s ease' }}>
-                              {isSelected && !isMockSubmitted && <div style={{ width: '10px', height: '10px', backgroundColor: 'white', borderRadius: '50%' }} />}
-                              {isMockSubmitted && isCorrect && <span style={{ color: '#10b981', fontSize: '16px', lineHeight: 1, fontWeight: 'bold' }}>✓</span>}
-                              {isMockSubmitted && isSelected && !isCorrect && <span style={{ color: '#ef4444', fontSize: '14px', lineHeight: 1, fontWeight: 'bold' }}>✕</span>}
-                            </div>
-                            <span style={{ fontSize: '1.05rem', lineHeight: 1.5, fontWeight: isSelected ? 600 : 400 }}>{opt}</span>
-                          </button>
-                        )
-                      })}
+                      {mockQuestions[currentMockQuestionIndex].text.split('\n\n').map((paragraph, i) => (
+                        <p key={i} style={{ fontSize: '1.05rem', lineHeight: 1.7, marginBottom: '1.5rem', color: '#334155' }}>
+                          {paragraph}
+                        </p>
+                      ))}
                     </div>
 
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '2.5rem', paddingTop: '1.5rem', borderTop: '1px solid #e2e8f0' }}>
-                      <div style={{ display: 'flex', alignItems: 'center' }}>
-                        {isMockSubmitted && (
-                          <div style={{ padding: '0.5rem 1rem', borderRadius: '0.5rem', backgroundColor: mockAnswers[currentMockQuestionIndex].every(a => mockQuestions[currentMockQuestionIndex].correctOptions.includes(a)) && mockAnswers[currentMockQuestionIndex].length === mockQuestions[currentMockQuestionIndex].correctOptions.length ? 'rgba(34, 197, 94, 0.1)' : 'rgba(239, 68, 68, 0.1)', color: mockAnswers[currentMockQuestionIndex].every(a => mockQuestions[currentMockQuestionIndex].correctOptions.includes(a)) && mockAnswers[currentMockQuestionIndex].length === mockQuestions[currentMockQuestionIndex].correctOptions.length ? '#22c55e' : '#ef4444', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                            {mockAnswers[currentMockQuestionIndex].every(a => mockQuestions[currentMockQuestionIndex].correctOptions.includes(a)) && mockAnswers[currentMockQuestionIndex].length === mockQuestions[currentMockQuestionIndex].correctOptions.length ? '✅ Perfect! All correct.' : '❌ Incorrect. Review highlighted answers.'}
-                          </div>
-                        )}
+                    {/* Right pane: Questions */}
+                    <div style={{ padding: '2.5rem', display: 'flex', flexDirection: 'column', backgroundColor: '#f8fafc' }}>
+                      <h4 style={{ fontSize: '1.15rem', fontWeight: 700, color: '#0f172a', marginBottom: '1.5rem', lineHeight: 1.5 }}>
+                        {mockQuestions[currentMockQuestionIndex].question}
+                      </h4>
+
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', flex: 1 }}>
+                        {mockQuestions[currentMockQuestionIndex].options.map((opt, idx) => {
+                          const isSelected = mockAnswers[currentMockQuestionIndex].includes(idx);
+                          const isCorrect = mockQuestions[currentMockQuestionIndex].correctOptions.includes(idx);
+                          let borderStyle = '1px solid #cbd5e1';
+                          let bgStyle = isSelected ? '#f0f9ff' : 'white';
+                          let textColor = isSelected ? '#0f172a' : '#475569';
+
+                          if (isSelected) borderStyle = '1px solid #3b82f6';
+
+                          if (isMockSubmitted) {
+                            if (isCorrect) {
+                              borderStyle = '1px solid #10b981'; // Green
+                              bgStyle = isSelected ? '#ecfdf5' : '#f0fdf4';
+                              textColor = '#065f46';
+                            } else if (isSelected && !isCorrect) {
+                              borderStyle = '1px solid #ef4444'; // Red
+                              bgStyle = '#fef2f2';
+                              textColor = '#991b1b';
+                            }
+                          }
+
+                          return (
+                            <button
+                              key={idx}
+                              onClick={() => {
+                                if (isMockSubmitted) return;
+                                setMockAnswers(prev => {
+                                  const newAnswers = [...prev];
+                                  newAnswers[currentMockQuestionIndex] = [idx];
+                                  return newAnswers;
+                                });
+                              }}
+                              style={{
+                                display: 'flex', alignItems: 'center', gap: '1rem', padding: '1.25rem 1.5rem',
+                                borderRadius: '0.75rem', backgroundColor: bgStyle, border: borderStyle,
+                                color: textColor, cursor: isMockSubmitted ? 'default' : 'pointer', textAlign: 'left',
+                                transition: 'all 0.2s ease',
+                                outline: 'none',
+                                boxShadow: isSelected && !isMockSubmitted ? '0 4px 14px -4px rgba(59, 130, 246, 0.3)' : '0 1px 2px 0 rgba(0, 0, 0, 0.05)'
+                              }}
+                              onMouseOver={e => {
+                                if (!isMockSubmitted) {
+                                  e.currentTarget.style.backgroundColor = isSelected ? '#f0f9ff' : '#f8fafc';
+                                  if (!isSelected) e.currentTarget.style.border = '1px solid #94a3b8';
+                                }
+                              }}
+                              onMouseOut={e => {
+                                if (!isMockSubmitted) {
+                                  e.currentTarget.style.backgroundColor = isSelected ? '#f0f9ff' : 'white';
+                                  if (!isSelected) e.currentTarget.style.border = '1px solid #cbd5e1';
+                                }
+                              }}
+                            >
+                              <div style={{ width: '24px', height: '24px', border: `2px solid ${isMockSubmitted && isCorrect ? '#10b981' : (isMockSubmitted && isSelected && !isCorrect) ? '#ef4444' : isSelected ? '#3b82f6' : '#cbd5e1'}`, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: isSelected && !isMockSubmitted ? '#3b82f6' : 'transparent', flexShrink: 0, transition: 'all 0.2s ease' }}>
+                                {isSelected && !isMockSubmitted && <div style={{ width: '10px', height: '10px', backgroundColor: 'white', borderRadius: '50%' }} />}
+                                {isMockSubmitted && isCorrect && <span style={{ color: '#10b981', fontSize: '16px', lineHeight: 1, fontWeight: 'bold' }}>✓</span>}
+                                {isMockSubmitted && isSelected && !isCorrect && <span style={{ color: '#ef4444', fontSize: '14px', lineHeight: 1, fontWeight: 'bold' }}>✕</span>}
+                              </div>
+                              <span style={{ fontSize: '1.05rem', lineHeight: 1.5, fontWeight: isSelected ? 600 : 400 }}>{opt}</span>
+                            </button>
+                          )
+                        })}
                       </div>
 
-                      <div style={{ display: 'flex', gap: '1rem' }}>
-                        <button
-                          onClick={() => {
-                            if (currentMockQuestionIndex > 0) {
-                              setCurrentMockQuestionIndex(prev => prev - 1);
-                            }
-                          }}
-                          disabled={currentMockQuestionIndex === 0}
-                          style={{ backgroundColor: currentMockQuestionIndex > 0 ? 'white' : '#f8fafc', color: currentMockQuestionIndex > 0 ? '#475569' : '#94a3b8', border: '1px solid #cbd5e1', padding: '0.85rem 1.75rem', borderRadius: '0.75rem', fontWeight: 600, cursor: currentMockQuestionIndex > 0 ? 'pointer' : 'not-allowed', transition: 'all 0.2s', boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)' }}
-                        >
-                          Previous
-                        </button>
-                        
-                        {currentMockQuestionIndex === mockQuestions.length - 1 ? (
-                          isMockSubmitted ? (
-                            <button
-                              onClick={() => {
-                                setCurrentMockQuestionIndex(0);
-                                setMockAnswers(mockQuestions.map(() => []));
-                                setIsMockSubmitted(false);
-                              }}
-                              style={{ backgroundColor: '#6366f1', color: 'white', border: 'none', padding: '0.85rem 1.75rem', borderRadius: '0.5rem', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 4px 14px 0 rgba(99,102,241,0.39)' }}
-                            >
-                              Retake Test
-                            </button>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '2.5rem', paddingTop: '1.5rem', borderTop: '1px solid #e2e8f0' }}>
+                        <div style={{ display: 'flex', alignItems: 'center' }}>
+                          {isMockSubmitted && (
+                            <div style={{ padding: '0.5rem 1rem', borderRadius: '0.5rem', backgroundColor: mockAnswers[currentMockQuestionIndex].every(a => mockQuestions[currentMockQuestionIndex].correctOptions.includes(a)) && mockAnswers[currentMockQuestionIndex].length === mockQuestions[currentMockQuestionIndex].correctOptions.length ? 'rgba(34, 197, 94, 0.1)' : 'rgba(239, 68, 68, 0.1)', color: mockAnswers[currentMockQuestionIndex].every(a => mockQuestions[currentMockQuestionIndex].correctOptions.includes(a)) && mockAnswers[currentMockQuestionIndex].length === mockQuestions[currentMockQuestionIndex].correctOptions.length ? '#22c55e' : '#ef4444', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                              {mockAnswers[currentMockQuestionIndex].every(a => mockQuestions[currentMockQuestionIndex].correctOptions.includes(a)) && mockAnswers[currentMockQuestionIndex].length === mockQuestions[currentMockQuestionIndex].correctOptions.length ? '✅ Perfect! All correct.' : '❌ Incorrect. Review highlighted answers.'}
+                            </div>
+                          )}
+                        </div>
+
+                        <div style={{ display: 'flex', gap: '1rem' }}>
+                          <button
+                            onClick={() => {
+                              if (currentMockQuestionIndex > 0) {
+                                setCurrentMockQuestionIndex(prev => prev - 1);
+                              }
+                            }}
+                            disabled={currentMockQuestionIndex === 0}
+                            style={{ backgroundColor: currentMockQuestionIndex > 0 ? 'white' : '#f8fafc', color: currentMockQuestionIndex > 0 ? '#475569' : '#94a3b8', border: '1px solid #cbd5e1', padding: '0.85rem 1.75rem', borderRadius: '0.75rem', fontWeight: 600, cursor: currentMockQuestionIndex > 0 ? 'pointer' : 'not-allowed', transition: 'all 0.2s', boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)' }}
+                          >
+                            Previous
+                          </button>
+
+                          {currentMockQuestionIndex === mockQuestions.length - 1 ? (
+                            isMockSubmitted ? (
+                              <button
+                                onClick={() => {
+                                  setCurrentMockQuestionIndex(0);
+                                  setMockAnswers(mockQuestions.map(() => []));
+                                  setIsMockSubmitted(false);
+                                }}
+                                style={{ backgroundColor: '#6366f1', color: 'white', border: 'none', padding: '0.85rem 1.75rem', borderRadius: '0.5rem', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 4px 14px 0 rgba(99,102,241,0.39)' }}
+                              >
+                                Retake Test
+                              </button>
+                            ) : (
+                              <button
+                                onClick={() => {
+                                  setIsMockSubmitted(true);
+                                  setShowResultsScreen(true);
+                                }}
+                                disabled={mockAnswers[currentMockQuestionIndex].length === 0}
+                                style={{ backgroundColor: mockAnswers[currentMockQuestionIndex].length > 0 ? '#3b82f6' : '#e2e8f0', color: mockAnswers[currentMockQuestionIndex].length > 0 ? 'white' : '#94a3b8', border: 'none', padding: '0.85rem 2rem', borderRadius: '0.75rem', fontWeight: 600, cursor: mockAnswers[currentMockQuestionIndex].length > 0 ? 'pointer' : 'not-allowed', transition: 'all 0.2s', boxShadow: mockAnswers[currentMockQuestionIndex].length > 0 ? '0 4px 14px -4px rgba(59, 130, 246, 0.4)' : 'none' }}
+                              >
+                                Submit Test
+                              </button>
+                            )
                           ) : (
                             <button
                               onClick={() => {
-                                setIsMockSubmitted(true);
-                                setShowResultsScreen(true);
+                                setCurrentMockQuestionIndex(prev => prev + 1);
                               }}
-                              disabled={mockAnswers[currentMockQuestionIndex].length === 0}
-                              style={{ backgroundColor: mockAnswers[currentMockQuestionIndex].length > 0 ? '#3b82f6' : '#e2e8f0', color: mockAnswers[currentMockQuestionIndex].length > 0 ? 'white' : '#94a3b8', border: 'none', padding: '0.85rem 2rem', borderRadius: '0.75rem', fontWeight: 600, cursor: mockAnswers[currentMockQuestionIndex].length > 0 ? 'pointer' : 'not-allowed', transition: 'all 0.2s', boxShadow: mockAnswers[currentMockQuestionIndex].length > 0 ? '0 4px 14px -4px rgba(59, 130, 246, 0.4)' : 'none' }}
+                              disabled={!isMockSubmitted && mockAnswers[currentMockQuestionIndex].length === 0}
+                              style={{ backgroundColor: (!isMockSubmitted && mockAnswers[currentMockQuestionIndex].length === 0) ? '#e2e8f0' : '#3b82f6', color: (!isMockSubmitted && mockAnswers[currentMockQuestionIndex].length === 0) ? '#94a3b8' : 'white', border: 'none', padding: '0.85rem 2rem', borderRadius: '0.75rem', fontWeight: 600, cursor: (!isMockSubmitted && mockAnswers[currentMockQuestionIndex].length === 0) ? 'not-allowed' : 'pointer', transition: 'all 0.2s', boxShadow: (!isMockSubmitted && mockAnswers[currentMockQuestionIndex].length === 0) ? 'none' : '0 4px 14px -4px rgba(59, 130, 246, 0.4)' }}
                             >
-                              Submit Test
+                              Next Question
                             </button>
-                          )
-                        ) : (
-                          <button
-                            onClick={() => {
-                              setCurrentMockQuestionIndex(prev => prev + 1);
-                            }}
-                            disabled={!isMockSubmitted && mockAnswers[currentMockQuestionIndex].length === 0}
-                            style={{ backgroundColor: (!isMockSubmitted && mockAnswers[currentMockQuestionIndex].length === 0) ? '#e2e8f0' : '#3b82f6', color: (!isMockSubmitted && mockAnswers[currentMockQuestionIndex].length === 0) ? '#94a3b8' : 'white', border: 'none', padding: '0.85rem 2rem', borderRadius: '0.75rem', fontWeight: 600, cursor: (!isMockSubmitted && mockAnswers[currentMockQuestionIndex].length === 0) ? 'not-allowed' : 'pointer', transition: 'all 0.2s', boxShadow: (!isMockSubmitted && mockAnswers[currentMockQuestionIndex].length === 0) ? 'none' : '0 4px 14px -4px rgba(59, 130, 246, 0.4)' }}
-                          >
-                            Next Question
-                          </button>
-                        )}
+                          )}
+                        </div>
                       </div>
                     </div>
-                  </div>
                   </div>
                 )}
               </div>
