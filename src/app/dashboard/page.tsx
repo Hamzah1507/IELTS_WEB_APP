@@ -1,9 +1,9 @@
 'use client';
 
 import Image from 'next/image';
-import { 
-  LayoutDashboard, FileText, HelpCircle, Map, Clock, 
-  Bot, FileCheck, BookOpen, ChevronDown, Gift, 
+import {
+  LayoutDashboard, FileText, HelpCircle, Map, Clock,
+  Bot, FileCheck, BookOpen, ChevronDown, Gift,
   BookA, BookType, Languages, UserPlus, X, Eye, EyeOff, Download, Play, Music, LogOut, Menu, Bell
 } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
@@ -40,20 +40,58 @@ export default function Dashboard() {
   const [userName, setUserName] = useState('Trainer');
   const [isLoading, setIsLoading] = useState(true);
   const [studentsList, setStudentsList] = useState<any[]>([]);
-  const [extraPracticeFiles, setExtraPracticeFiles] = useState<{id?: string, name: string, sizeBytes: number, type: string, url: string}[]>([]);
-  const [extraRoadmapFiles, setExtraRoadmapFiles] = useState<{id?: string, name: string, sizeBytes: number, type: string, url: string}[]>([]);
+  const [extraPracticeFiles, setExtraPracticeFiles] = useState<{ id?: string, name: string, sizeBytes: number, type: string, url: string }[]>([]);
+  const [extraRoadmapFiles, setExtraRoadmapFiles] = useState<{ id?: string, name: string, sizeBytes: number, type: string, url: string }[]>([]);
   const [openMenuFile, setOpenMenuFile] = useState<string | null>(null);
   const [selectedStudent, setSelectedStudent] = useState<any | null>(null);
-  const [editingStudent, setEditingStudent] = useState<{student: any, idx: number} | null>(null);
+  const [editingStudent, setEditingStudent] = useState<{ student: any, idx: number } | null>(null);
   const [editPhone, setEditPhone] = useState('');
   const [editEmail, setEditEmail] = useState('');
   const [openStudentMenu, setOpenStudentMenu] = useState<number | null>(null);
   const practiceFileInputRef = useRef<HTMLInputElement>(null);
   const roadmapFileInputRef = useRef<HTMLInputElement>(null);
   const [aiChatInput, setAiChatInput] = useState('');
-  const [aiChatMessages, setAiChatMessages] = useState<{role: string, text: string}[]>([
+  const [aiChatMessages, setAiChatMessages] = useState<{ role: string, text: string }[]>([
     { role: 'bot', text: 'Hello! I am your AI Assistant. I specialize in IELTS, PTE, TOEFL preparation, and immigration-related inquiries. How can I help you today?' }
   ]);
+
+  const [currentMockQuestionIndex, setCurrentMockQuestionIndex] = useState(0);
+  const [mockAnswers, setMockAnswers] = useState<number[][]>([[], []]);
+  const [isMockSubmitted, setIsMockSubmitted] = useState(false);
+  const [showResultsScreen, setShowResultsScreen] = useState(false);
+
+  const mockQuestions = [
+    {
+      id: 1,
+      type: "Single response (Select one correct response)",
+      prompt: "Read the text and answer the question by selecting the correct response. You can only select one response.",
+      text: "Teachers have endless possibilities when it comes to the methods of teaching that they can use but, in reality, most of the time they use fairly traditional methods of teaching. Arguably the most common method is the Instructor Based model. This method has the teacher as the focus of the class and tends to involve the teacher explaining the subject with little or no student interaction or input.\n\nThis may be the easiest and simplest method but its effect is reduced because of the short attention span many students have. Since teachers don't interact with their students when they are using Instructor Based teaching models, most students lose focus and their mind tends to wander; without feedback from the students, it is possible for the teacher to continue without knowing if the students have understood, or indeed if they are even listening. What is more, students are less likely to listen carefully when they are not playing an active part in the lesson.",
+      question: "What does the writer say about teaching methods?",
+      options: [
+        "Teachers do not use the Instructor Based model as much as they used to.",
+        "A problem with the Instruction Based Model is that students cannot concentrate for a long time.",
+        "Traditionally, teachers have encouraged students to interact in the classroom.",
+        "The Instructor Based model is difficult for teachers as all of the focus is on them.",
+        "Teachers using the Instructor Based model may not know if their students are following the lesson."
+      ],
+      correctOptions: [4]
+    },
+    {
+      id: 2,
+      type: "Single response (Select one correct response)",
+      prompt: "Read the text and answer the question by selecting the correct response. You can only select one response.",
+      text: "Daylight Saving Time (DST) is the practice of putting clocks forward during the warmer months of the year so it becomes dark later each day. The usual way of operating DST is to put clocks forward by one hour in the spring and back an hour in autumn. DST goes back to 1908 when it was introduced in Ontario, Canada. Since then, several countries have used it at various times. Its use isn't, however, found everywhere. Countries in Asia and Africa generally don't use it. In countries where it is used, some people question whether the practice is still useful.\n\nIn this article, we consider the arguments for and against DST. The discussion covers some key areas in which DST has an effect: energy use, the economy, public safety, and health. DST supporters argue that it decreases energy consumption by reducing the need for heating and lighting. However, research shows that although electricity savings are greater for countries further away from the equator, the line on a map dividing the northern and southern halves of the Earth, electricity use in regions near that line increases. Shops benefit from more people being out spending money. However, some farmers suffer because of the limited hours available to gather crops or milk cows. Increased daylight benefits public safety. A recent study showed that full-year DST would make roads easier to see and safer for drivers and pedestrians, but other research is less confident about its advantages. With respect to health, more daylight hours mean more time to spend on outdoor activities. However, sleep patterns can be interrupted. The costs and benefits clearly change between places and local activities.",
+      question: "According to the text, which of the following are true statements about Daylight Saving Time (DST)?",
+      options: [
+        "It was first used in Canada.",
+        "Its use causes problems in dairy farming because of increased fuel costs.",
+        "It has been proved to make driving less safe at certain times.",
+        "It is no longer considered a good idea by everyone in some places.",
+        "Its ability to reduce fuel use depends on where in the world it is used."
+      ],
+      correctOptions: [3]
+    }
+  ];
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -100,11 +138,11 @@ export default function Dashboard() {
           localStorage.setItem('dev_mock_students', JSON.stringify(mapped));
           return;
         }
-      } catch (e) {}
+      } catch (e) { }
       // Fallback to localStorage if Supabase unreachable
       const savedStudents = localStorage.getItem('dev_mock_students');
       if (savedStudents) {
-        try { setStudentsList(JSON.parse(savedStudents)); } catch (e) {}
+        try { setStudentsList(JSON.parse(savedStudents)); } catch (e) { }
       }
     };
     fetchStudents();
@@ -122,6 +160,25 @@ export default function Dashboard() {
       }
     };
     fetchMaterials();
+
+    // ===== SUPABASE REALTIME SUBSCRIPTIONS =====
+    const studentsSubscription = supabase.channel('realtime:students')
+      .on('postgres', { event: '*', schema: 'public', table: 'students' }, () => {
+        fetchStudents();
+      })
+      .subscribe();
+
+    const materialsSubscription = supabase.channel('realtime:study_materials')
+      .on('postgres', { event: '*', schema: 'public', table: 'study_materials' }, () => {
+        fetchMaterials();
+      })
+      .subscribe();
+
+    // Cleanup subscriptions when component unmounts
+    return () => {
+      supabase.removeChannel(studentsSubscription);
+      supabase.removeChannel(materialsSubscription);
+    };
   }, []);
 
   const handleCreateStudent = async () => {
@@ -174,7 +231,7 @@ export default function Dashboard() {
           }
         }
       });
-      
+
       if (signUpError) {
         alert(`Supabase Error: ${signUpError.message}`);
         setIsCreatingStudent(false);
@@ -209,13 +266,13 @@ export default function Dashboard() {
       await Promise.all(files.map(async (file) => {
         const fileType = file.type.includes('pdf') ? 'pdf' : 'audio';
         const fileName = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.\-_]/g, '_')}`;
-        
+
         const { error: uploadError } = await supabase.storage.from('materials').upload(fileName, file);
         if (uploadError) {
           alert(`Upload failed for ${file.name}: ` + uploadError.message);
           return;
         }
-        
+
         const { data: publicUrlData } = supabase.storage.from('materials').getPublicUrl(fileName);
 
         const { data: dbData, error: dbError } = await supabase.from('study_materials').insert({
@@ -249,13 +306,13 @@ export default function Dashboard() {
       await Promise.all(files.map(async (file) => {
         const fileType = file.type.includes('pdf') ? 'pdf' : 'audio';
         const fileName = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.\-_]/g, '_')}`;
-        
+
         const { error: uploadError } = await supabase.storage.from('materials').upload(fileName, file);
         if (uploadError) {
           alert(`Upload failed for ${file.name}: ` + uploadError.message);
           return;
         }
-        
+
         const { data: publicUrlData } = supabase.storage.from('materials').getPublicUrl(fileName);
 
         const { data: dbData, error: dbError } = await supabase.from('study_materials').insert({
@@ -318,7 +375,7 @@ export default function Dashboard() {
   ];
 
   const formatSize = (bytes: number) => bytes > 1024 * 1024 ? (bytes / (1024 * 1024)).toFixed(1) + ' MB' : Math.round(bytes / 1024) + ' KB';
-  
+
   const studyRoadmapFiles: { name: string; sizeBytes: number; type: string }[] = [];
 
   const practiceQuestionsFiles: { name: string; sizeBytes: number; type: string }[] = [];
@@ -382,9 +439,9 @@ export default function Dashboard() {
           </div>
         )}
       </div>
-      
+
       <div style={{ display: 'flex', gap: '0.5rem' }}>
-        <a 
+        <a
           href={file.url || `/Study Material/${file.name}`}
           target="_blank" rel="noopener noreferrer"
           style={{
@@ -397,10 +454,10 @@ export default function Dashboard() {
           onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f9fafb'}
           onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'white'}
         >
-          {file.type === 'pdf' ? <Eye size={14} /> : <Play size={14} />} 
+          {file.type === 'pdf' ? <Eye size={14} /> : <Play size={14} />}
           {file.type === 'pdf' ? 'View' : 'Play'}
         </a>
-        <a 
+        <a
           href={file.url || `/Study Material/${file.name}`}
           download
           style={{
@@ -422,13 +479,13 @@ export default function Dashboard() {
   if (isLoading) return null;
 
   return (
-    <div style={{ 
-      position: 'fixed', 
-      top: 0, 
-      left: 0, 
-      width: '100vw', 
-      height: '100vh', 
-      backgroundColor: '#f5f6fa', 
+    <div style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      width: '100vw',
+      height: '100vh',
+      backgroundColor: '#f5f6fa',
       zIndex: 999,
       display: 'flex',
       flexDirection: 'column',
@@ -445,7 +502,7 @@ export default function Dashboard() {
         flexShrink: 0
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-          <button 
+          <button
             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
             style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#111827', display: 'flex', alignItems: 'center', padding: '0.25rem', borderRadius: '0.25rem' }}
           >
@@ -464,9 +521,9 @@ export default function Dashboard() {
                 {userRole === 'trainer' ? 'Tutor' : 'Student'}
               </div>
             </div>
-            <div style={{ 
-              width: '38px', height: '38px', borderRadius: '50%', 
-              background: 'linear-gradient(135deg, #1e1b4b, #312e81)', 
+            <div style={{
+              width: '38px', height: '38px', borderRadius: '50%',
+              background: 'linear-gradient(135deg, #1e1b4b, #312e81)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               color: 'white', fontWeight: 700, fontSize: '0.9rem', cursor: 'pointer',
               boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
@@ -474,7 +531,7 @@ export default function Dashboard() {
               {userName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()}
             </div>
           </div>
-          
+
           <div style={{ height: '24px', width: '1px', backgroundColor: '#e2e8f0' }}></div>
 
           <button
@@ -498,67 +555,67 @@ export default function Dashboard() {
         {/* Sidebar */}
         {isSidebarOpen && (
           <aside style={{
-          width: '220px',
-          backgroundColor: 'white',
-          borderRight: '1px solid #e5e7eb',
-          padding: '1.5rem 0.75rem',
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'space-between',
-          flexShrink: 0,
-          overflowY: 'auto'
-        }}>
-          <div>
-            {sidebarItems.map((item) => {
-              const Icon = item.icon;
-              return (
-                <button
-                  key={item.name}
-                  onClick={() => handleTabChange(item.name)}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.75rem',
-                    width: '100%',
-                    padding: '0.7rem 1rem',
-                    marginBottom: '0.25rem',
-                    border: 'none',
-                    borderRadius: '0.5rem',
-                    cursor: 'pointer',
-                    fontSize: '0.85rem',
-                    fontWeight: activeTab === item.name ? 600 : 450,
-                    color: activeTab === item.name ? '#111827' : '#6b7280',
-                    backgroundColor: activeTab === item.name ? '#f3f4f6' : 'transparent',
-                    transition: 'all 0.15s ease',
-                    textAlign: 'left',
-                    position: 'relative'
-                  }}
-                >
-                  <Icon size={18} />
-                  {item.name}
-                  {(item as any).isNew && (
-                    <span style={{
-                      marginLeft: 'auto',
-                      backgroundColor: '#ef4444',
-                      color: 'white',
-                      fontSize: '0.6rem',
-                      fontWeight: 700,
-                      padding: '0.15rem 0.4rem',
-                      borderRadius: '999px',
-                      textTransform: 'uppercase'
-                    }}>New</span>
-                  )}
-                </button>
-              );
-            })}
-          </div>
-        </aside>
+            width: '220px',
+            backgroundColor: 'white',
+            borderRight: '1px solid #e5e7eb',
+            padding: '1.5rem 0.75rem',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between',
+            flexShrink: 0,
+            overflowY: 'auto'
+          }}>
+            <div>
+              {sidebarItems.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <button
+                    key={item.name}
+                    onClick={() => handleTabChange(item.name)}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.75rem',
+                      width: '100%',
+                      padding: '0.7rem 1rem',
+                      marginBottom: '0.25rem',
+                      border: 'none',
+                      borderRadius: '0.5rem',
+                      cursor: 'pointer',
+                      fontSize: '0.85rem',
+                      fontWeight: activeTab === item.name ? 600 : 450,
+                      color: activeTab === item.name ? '#111827' : '#6b7280',
+                      backgroundColor: activeTab === item.name ? '#f3f4f6' : 'transparent',
+                      transition: 'all 0.15s ease',
+                      textAlign: 'left',
+                      position: 'relative'
+                    }}
+                  >
+                    <Icon size={18} />
+                    {item.name}
+                    {(item as any).isNew && (
+                      <span style={{
+                        marginLeft: 'auto',
+                        backgroundColor: '#ef4444',
+                        color: 'white',
+                        fontSize: '0.6rem',
+                        fontWeight: 700,
+                        padding: '0.15rem 0.4rem',
+                        borderRadius: '999px',
+                        textTransform: 'uppercase'
+                      }}>New</span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </aside>
         )}
 
         {/* Main Content */}
-        <main className="animate-tab-content" style={{ 
-          flex: 1, 
-          padding: '1.5rem 2rem', 
+        <main className="animate-tab-content" style={{
+          flex: 1,
+          padding: '1.5rem 2rem',
           overflowY: 'auto',
           backgroundColor: '#f5f6fa'
         }} key={activeTab}>
@@ -654,8 +711,202 @@ export default function Dashboard() {
                   <p style={{ fontSize: '0.85rem', color: '#6b7280', marginTop: '0.25rem' }}>View and manage your mock tests.</p>
                 </div>
               </div>
-              <div style={{ padding: '4rem 2rem', textAlign: 'center', backgroundColor: 'white', borderRadius: '1rem', border: '1px solid #e5e7eb' }}>
-                <p style={{ color: '#64748b' }}>Mock Test section content will be added here.</p>
+              <div style={{ backgroundColor: 'white', color: '#111827', borderRadius: '1rem', overflow: 'hidden', display: 'flex', flexDirection: 'column', minHeight: '650px', fontFamily: 'system-ui, -apple-system, sans-serif', border: '1px solid #e2e8f0', boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.05)' }}>
+                <div style={{ padding: '1rem 2rem', backgroundColor: '#f8fafc', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <h3 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 600, color: '#0f172a' }}>PTE Academic Mock Test</h3>
+                  <span style={{ backgroundColor: '#e2e8f0', padding: '0.4rem 1rem', borderRadius: '999px', fontSize: '0.85rem', fontWeight: 600, color: '#475569' }}>
+                    Question {currentMockQuestionIndex + 1} of {mockQuestions.length}
+                  </span>
+                </div>
+
+                {showResultsScreen ? (
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 1, backgroundColor: '#f8fafc', position: 'relative' }}>
+                    <div style={{ width: '400px', padding: '3rem 2rem', borderRadius: '1.5rem', backgroundColor: 'white', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', alignItems: 'center', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.1)', animation: 'mock-pulse 2s infinite cubic-bezier(0.4, 0, 0.6, 1)' }}>
+                      <style>{`
+                        @keyframes mock-pulse {
+                          0%, 100% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0); border-color: #e2e8f0; }
+                          50% { box-shadow: 0 0 25px 5px rgba(99, 102, 241, 0.15); border-color: #a5b4fc; }
+                        }
+                      `}</style>
+                      <h2 style={{ color: '#1e293b', fontSize: '1.75rem', fontWeight: 800, margin: '0 0 0.5rem 0', textAlign: 'center' }}>Test Completed!</h2>
+                      <p style={{ color: '#64748b', fontSize: '1rem', margin: '0 0 2.5rem 0', textAlign: 'center' }}>Here is your final evaluation.</p>
+                      
+                      <div style={{ width: '160px', height: '160px', borderRadius: '1.5rem', backgroundColor: '#f0f9ff', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', marginBottom: '2rem', border: '2px solid #bae6fd' }}>
+                        <span style={{ color: '#3b82f6', fontSize: '0.85rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.5rem' }}>Total Score</span>
+                        <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.25rem' }}>
+                          <span style={{ color: '#0f172a', fontSize: '3.5rem', fontWeight: 800, lineHeight: 1 }}>
+                            {mockQuestions.reduce((acc, q, idx) => acc + (mockAnswers[idx]?.length === q.correctOptions.length && mockAnswers[idx].every(val => q.correctOptions.includes(val)) ? 1 : 0), 0)}
+                          </span>
+                          <span style={{ color: '#64748b', fontSize: '1.5rem', fontWeight: 700 }}>/ {mockQuestions.length}</span>
+                        </div>
+                      </div>
+
+                      <div style={{ display: 'flex', gap: '1rem', marginBottom: '2.5rem', width: '100%' }}>
+                        <div style={{ flex: 1, backgroundColor: '#ecfdf5', border: '1px solid #10b981', borderRadius: '1rem', padding: '0.75rem', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                          <span style={{ color: '#059669', fontSize: '1.5rem', fontWeight: 800 }}>{mockQuestions.reduce((acc, q, idx) => acc + (mockAnswers[idx]?.length === q.correctOptions.length && mockAnswers[idx].every(val => q.correctOptions.includes(val)) ? 1 : 0), 0)}</span>
+                          <span style={{ color: '#10b981', fontSize: '0.8rem', fontWeight: 700, textTransform: 'uppercase', marginTop: '0.25rem' }}>Accurate</span>
+                        </div>
+                        <div style={{ flex: 1, backgroundColor: '#fef2f2', border: '1px solid #ef4444', borderRadius: '1rem', padding: '0.75rem', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                          <span style={{ color: '#dc2626', fontSize: '1.5rem', fontWeight: 800 }}>{mockQuestions.length - mockQuestions.reduce((acc, q, idx) => acc + (mockAnswers[idx]?.length === q.correctOptions.length && mockAnswers[idx].every(val => q.correctOptions.includes(val)) ? 1 : 0), 0)}</span>
+                          <span style={{ color: '#ef4444', fontSize: '0.8rem', fontWeight: 700, textTransform: 'uppercase', marginTop: '0.25rem' }}>Incorrect</span>
+                        </div>
+                      </div>
+                      
+                      <button
+                        onClick={() => setShowResultsScreen(false)}
+                        style={{ backgroundColor: '#6366f1', color: 'white', border: 'none', padding: '1rem 2.5rem', borderRadius: '0.75rem', fontSize: '1.1rem', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s', width: '100%', boxShadow: '0 4px 14px 0 rgba(99,102,241,0.39)' }}
+                      >
+                        Review Answers
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', flex: 1 }}>
+                    {/* Left pane: Text */}
+                    <div style={{ padding: '2.5rem', borderRight: '1px solid #e2e8f0', overflowY: 'auto' }}>
+                    <p style={{ color: '#64748b', fontSize: '0.9rem', marginBottom: '1.5rem', lineHeight: 1.5, fontWeight: 500 }}>
+                      {mockQuestions[currentMockQuestionIndex].prompt}
+                    </p>
+                    {mockQuestions[currentMockQuestionIndex].text.split('\n\n').map((paragraph, i) => (
+                      <p key={i} style={{ fontSize: '1.05rem', lineHeight: 1.7, marginBottom: '1.5rem', color: '#334155' }}>
+                        {paragraph}
+                      </p>
+                    ))}
+                  </div>
+
+                  {/* Right pane: Questions */}
+                  <div style={{ padding: '2.5rem', display: 'flex', flexDirection: 'column', backgroundColor: '#f8fafc' }}>
+                    <h4 style={{ fontSize: '1.15rem', fontWeight: 700, color: '#0f172a', marginBottom: '1.5rem', lineHeight: 1.5 }}>
+                      {mockQuestions[currentMockQuestionIndex].question}
+                    </h4>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', flex: 1 }}>
+                      {mockQuestions[currentMockQuestionIndex].options.map((opt, idx) => {
+                        const isSelected = mockAnswers[currentMockQuestionIndex].includes(idx);
+                        const isCorrect = mockQuestions[currentMockQuestionIndex].correctOptions.includes(idx);
+                        let borderStyle = '1px solid #cbd5e1';
+                        let bgStyle = isSelected ? '#f0f9ff' : 'white';
+                        let textColor = isSelected ? '#0f172a' : '#475569';
+                        
+                        if (isSelected) borderStyle = '1px solid #3b82f6';
+
+                        if (isMockSubmitted) {
+                          if (isCorrect) {
+                            borderStyle = '1px solid #10b981'; // Green
+                            bgStyle = isSelected ? '#ecfdf5' : '#f0fdf4';
+                            textColor = '#065f46';
+                          } else if (isSelected && !isCorrect) {
+                            borderStyle = '1px solid #ef4444'; // Red
+                            bgStyle = '#fef2f2';
+                            textColor = '#991b1b';
+                          }
+                        }
+
+                        return (
+                          <button
+                            key={idx}
+                            onClick={() => {
+                              if (isMockSubmitted) return;
+                              setMockAnswers(prev => {
+                                const newAnswers = [...prev];
+                                newAnswers[currentMockQuestionIndex] = [idx];
+                                return newAnswers;
+                              });
+                            }}
+                            style={{
+                              display: 'flex', alignItems: 'center', gap: '1rem', padding: '1.25rem 1.5rem',
+                              borderRadius: '0.75rem', backgroundColor: bgStyle, border: borderStyle,
+                              color: textColor, cursor: isMockSubmitted ? 'default' : 'pointer', textAlign: 'left',
+                              transition: 'all 0.2s ease',
+                              outline: 'none',
+                              boxShadow: isSelected && !isMockSubmitted ? '0 4px 14px -4px rgba(59, 130, 246, 0.3)' : '0 1px 2px 0 rgba(0, 0, 0, 0.05)'
+                            }}
+                            onMouseOver={e => {
+                              if (!isMockSubmitted) {
+                                e.currentTarget.style.backgroundColor = isSelected ? '#f0f9ff' : '#f8fafc';
+                                if (!isSelected) e.currentTarget.style.border = '1px solid #94a3b8';
+                              }
+                            }}
+                            onMouseOut={e => {
+                              if (!isMockSubmitted) {
+                                e.currentTarget.style.backgroundColor = isSelected ? '#f0f9ff' : 'white';
+                                if (!isSelected) e.currentTarget.style.border = '1px solid #cbd5e1';
+                              }
+                            }}
+                          >
+                            <div style={{ width: '24px', height: '24px', border: `2px solid ${isMockSubmitted && isCorrect ? '#10b981' : (isMockSubmitted && isSelected && !isCorrect) ? '#ef4444' : isSelected ? '#3b82f6' : '#cbd5e1'}`, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: isSelected && !isMockSubmitted ? '#3b82f6' : 'transparent', flexShrink: 0, transition: 'all 0.2s ease' }}>
+                              {isSelected && !isMockSubmitted && <div style={{ width: '10px', height: '10px', backgroundColor: 'white', borderRadius: '50%' }} />}
+                              {isMockSubmitted && isCorrect && <span style={{ color: '#10b981', fontSize: '16px', lineHeight: 1, fontWeight: 'bold' }}>✓</span>}
+                              {isMockSubmitted && isSelected && !isCorrect && <span style={{ color: '#ef4444', fontSize: '14px', lineHeight: 1, fontWeight: 'bold' }}>✕</span>}
+                            </div>
+                            <span style={{ fontSize: '1.05rem', lineHeight: 1.5, fontWeight: isSelected ? 600 : 400 }}>{opt}</span>
+                          </button>
+                        )
+                      })}
+                    </div>
+
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '2.5rem', paddingTop: '1.5rem', borderTop: '1px solid #e2e8f0' }}>
+                      <div style={{ display: 'flex', alignItems: 'center' }}>
+                        {isMockSubmitted && (
+                          <div style={{ padding: '0.5rem 1rem', borderRadius: '0.5rem', backgroundColor: mockAnswers[currentMockQuestionIndex].every(a => mockQuestions[currentMockQuestionIndex].correctOptions.includes(a)) && mockAnswers[currentMockQuestionIndex].length === mockQuestions[currentMockQuestionIndex].correctOptions.length ? 'rgba(34, 197, 94, 0.1)' : 'rgba(239, 68, 68, 0.1)', color: mockAnswers[currentMockQuestionIndex].every(a => mockQuestions[currentMockQuestionIndex].correctOptions.includes(a)) && mockAnswers[currentMockQuestionIndex].length === mockQuestions[currentMockQuestionIndex].correctOptions.length ? '#22c55e' : '#ef4444', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            {mockAnswers[currentMockQuestionIndex].every(a => mockQuestions[currentMockQuestionIndex].correctOptions.includes(a)) && mockAnswers[currentMockQuestionIndex].length === mockQuestions[currentMockQuestionIndex].correctOptions.length ? '✅ Perfect! All correct.' : '❌ Incorrect. Review highlighted answers.'}
+                          </div>
+                        )}
+                      </div>
+
+                      <div style={{ display: 'flex', gap: '1rem' }}>
+                        <button
+                          onClick={() => {
+                            if (currentMockQuestionIndex > 0) {
+                              setCurrentMockQuestionIndex(prev => prev - 1);
+                            }
+                          }}
+                          disabled={currentMockQuestionIndex === 0}
+                          style={{ backgroundColor: currentMockQuestionIndex > 0 ? 'white' : '#f8fafc', color: currentMockQuestionIndex > 0 ? '#475569' : '#94a3b8', border: '1px solid #cbd5e1', padding: '0.85rem 1.75rem', borderRadius: '0.75rem', fontWeight: 600, cursor: currentMockQuestionIndex > 0 ? 'pointer' : 'not-allowed', transition: 'all 0.2s', boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)' }}
+                        >
+                          Previous
+                        </button>
+                        
+                        {currentMockQuestionIndex === mockQuestions.length - 1 ? (
+                          isMockSubmitted ? (
+                            <button
+                              onClick={() => {
+                                setCurrentMockQuestionIndex(0);
+                                setMockAnswers(mockQuestions.map(() => []));
+                                setIsMockSubmitted(false);
+                              }}
+                              style={{ backgroundColor: '#6366f1', color: 'white', border: 'none', padding: '0.85rem 1.75rem', borderRadius: '0.5rem', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 4px 14px 0 rgba(99,102,241,0.39)' }}
+                            >
+                              Retake Test
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => {
+                                setIsMockSubmitted(true);
+                                setShowResultsScreen(true);
+                              }}
+                              disabled={mockAnswers[currentMockQuestionIndex].length === 0}
+                              style={{ backgroundColor: mockAnswers[currentMockQuestionIndex].length > 0 ? '#3b82f6' : '#e2e8f0', color: mockAnswers[currentMockQuestionIndex].length > 0 ? 'white' : '#94a3b8', border: 'none', padding: '0.85rem 2rem', borderRadius: '0.75rem', fontWeight: 600, cursor: mockAnswers[currentMockQuestionIndex].length > 0 ? 'pointer' : 'not-allowed', transition: 'all 0.2s', boxShadow: mockAnswers[currentMockQuestionIndex].length > 0 ? '0 4px 14px -4px rgba(59, 130, 246, 0.4)' : 'none' }}
+                            >
+                              Submit Test
+                            </button>
+                          )
+                        ) : (
+                          <button
+                            onClick={() => {
+                              setCurrentMockQuestionIndex(prev => prev + 1);
+                            }}
+                            disabled={!isMockSubmitted && mockAnswers[currentMockQuestionIndex].length === 0}
+                            style={{ backgroundColor: (!isMockSubmitted && mockAnswers[currentMockQuestionIndex].length === 0) ? '#e2e8f0' : '#3b82f6', color: (!isMockSubmitted && mockAnswers[currentMockQuestionIndex].length === 0) ? '#94a3b8' : 'white', border: 'none', padding: '0.85rem 2rem', borderRadius: '0.75rem', fontWeight: 600, cursor: (!isMockSubmitted && mockAnswers[currentMockQuestionIndex].length === 0) ? 'not-allowed' : 'pointer', transition: 'all 0.2s', boxShadow: (!isMockSubmitted && mockAnswers[currentMockQuestionIndex].length === 0) ? 'none' : '0 4px 14px -4px rgba(59, 130, 246, 0.4)' }}
+                          >
+                            Next Question
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  </div>
+                )}
               </div>
             </div>
           ) : activeTab === 'Add Students' && userRole === 'trainer' ? (
@@ -670,20 +921,20 @@ export default function Dashboard() {
                   <p style={{ fontSize: '0.85rem', color: '#6b7280', marginTop: '0.25rem' }}>Manage and view all student details</p>
                 </div>
                 <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
-                  <button 
+                  <button
                     onClick={() => setIsAddStudentModalOpen(true)}
                     style={{
-                    display: 'flex', alignItems: 'center', gap: '0.5rem',
-                    padding: '0.6rem 1.25rem', borderRadius: '0.5rem',
-                    backgroundColor: '#111827', color: 'white', border: 'none',
-                    fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer'
-                  }}>
+                      display: 'flex', alignItems: 'center', gap: '0.5rem',
+                      padding: '0.6rem 1.25rem', borderRadius: '0.5rem',
+                      backgroundColor: '#111827', color: 'white', border: 'none',
+                      fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer'
+                    }}>
                     + Add Student
                   </button>
                   <div style={{ position: 'relative' }}>
-                    <input 
-                      type="text" 
-                      placeholder="Search students..." 
+                    <input
+                      type="text"
+                      placeholder="Search students..."
                       style={{
                         padding: '0.6rem 1rem 0.6rem 2.25rem',
                         borderRadius: '0.5rem',
@@ -884,13 +1135,13 @@ export default function Dashboard() {
                 <div style={{ padding: '1rem', backgroundColor: 'white', borderTop: '1px solid #e5e7eb' }}>
                   <form onSubmit={(e) => {
                     e.preventDefault();
-                    if(!aiChatInput.trim()) return;
-                    
+                    if (!aiChatInput.trim()) return;
+
                     const userMsg = aiChatInput.trim();
                     const lowerMsg = userMsg.toLowerCase();
                     setAiChatMessages(prev => [...prev, { role: 'user', text: userMsg }]);
                     setAiChatInput('');
-                    
+
                     let botReply = 'I am an AI assistant specifically trained to assist you with English proficiency exams and immigration processes.\n\nWhile I am constantly learning new things, my primary focus is ensuring you get the highest possible band score on your tests and the most accurate pathways for your visa applications.\n\nPlease ask me a specific question regarding IELTS, PTE, TOEFL, or global immigration pathways, and I will be happy to provide a comprehensive guide.';
                     if (lowerMsg.includes('weather')) {
                       botReply = "I sincerely apologize, but I do not have access to real-time meteorological data or weather forecasting services.\n\nMy architecture is entirely dedicated to helping students and professionals navigate the complexities of international exams such as IELTS, PTE, and TOEFL, as well as providing detailed guidance on immigration and visa procedures.\n\nIf you have any questions regarding how to structure a Band 9 essay or what the Express Entry requirements are for Canada, I would be more than happy to assist you in great detail!";
@@ -903,16 +1154,16 @@ export default function Dashboard() {
                     } else if (lowerMsg.includes('hello') || lowerMsg.includes('hi')) {
                       botReply = "Hello there! Welcome to your personal AI Tutor and Immigration Consultant.\n\nI am equipped with a vast database of strategies, templates, and past exam questions to help you conquer the IELTS, PTE, or TOEFL. Furthermore, I stay updated on the latest immigration pathways for countries like Canada, Australia, the UK, and New Zealand.\n\nTo get started, simply ask me to evaluate an essay, explain a complex grammar rule, or outline the requirements for a specific visa category. How can I best support your journey today?";
                     }
-                    
+
                     setTimeout(() => {
                       setAiChatMessages(prev => [...prev, { role: 'bot', text: botReply }]);
                     }, 800);
                   }} style={{ display: 'flex', gap: '0.75rem' }}>
-                    <input 
-                      type="text" 
+                    <input
+                      type="text"
                       value={aiChatInput}
                       onChange={(e) => setAiChatInput(e.target.value)}
-                      placeholder="Ask about immigration pathways, IELTS writing tips..." 
+                      placeholder="Ask about immigration pathways, IELTS writing tips..."
                       style={{ flex: 1, padding: '0.75rem 1rem', borderRadius: '0.5rem', border: '1px solid #d1d5db', fontSize: '0.85rem', outline: 'none' }}
                     />
                     <button type="submit" style={{ padding: '0 1.5rem', backgroundColor: '#111827', color: 'white', border: 'none', borderRadius: '0.5rem', fontWeight: 600, cursor: 'pointer', transition: 'background-color 0.2s' }}>
@@ -1002,11 +1253,11 @@ export default function Dashboard() {
                             <h4 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '0.5rem' }}>{card.title}</h4>
                             <p style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.7)', lineHeight: 1.5, marginBottom: '1.5rem' }}>{card.desc}</p>
                           </div>
-                          <button 
+                          <button
                             onClick={() => handleTabChange(card.action)}
-                            style={{ 
-                              width: '100%', padding: '0.85rem', borderRadius: '0.5rem', border: '1px solid rgba(255,255,255,0.1)', 
-                              backgroundColor: 'rgba(255,255,255,0.05)', color: 'white', fontWeight: 600, fontSize: '0.9rem', 
+                            style={{
+                              width: '100%', padding: '0.85rem', borderRadius: '0.5rem', border: '1px solid rgba(255,255,255,0.1)',
+                              backgroundColor: 'rgba(255,255,255,0.05)', color: 'white', fontWeight: 600, fontSize: '0.9rem',
                               cursor: 'pointer', transition: 'all 0.2s ease', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem'
                             }}
                             onMouseOver={(e) => { e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.15)'; }}
@@ -1102,7 +1353,7 @@ export default function Dashboard() {
                             <div style={{ width: '85%', height: '100%', background: 'linear-gradient(90deg, #6366f1, #8b5cf6)', borderRadius: '999px', boxShadow: '0 0 10px rgba(99, 102, 241, 0.5)' }}></div>
                           </div>
                         </div>
-                        
+
                         <div>
                           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
                             <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Avg. Assignment Completion</span>
@@ -1213,26 +1464,26 @@ export default function Dashboard() {
 
                     {/* Upcoming Deadlines */}
                     <div style={{ backgroundColor: 'white', borderRadius: '1rem', padding: '1.5rem', border: '1px solid #e5e7eb', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
-                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-                         <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#111827' }}>Action Items</h3>
-                         <Clock size={18} color="#9ca3af" />
-                       </div>
-                       <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                         <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', padding: '1rem', backgroundColor: '#fef2f2', borderRadius: '0.75rem', border: '1px solid #fecaca' }}>
-                           <div style={{ backgroundColor: 'white', padding: '0.5rem', borderRadius: '0.5rem', color: '#ef4444' }}><Clock size={20} /></div>
-                           <div>
-                             <h4 style={{ fontSize: '0.9rem', fontWeight: 700, color: '#991b1b', margin: '0 0 0.25rem 0' }}>Actual Exam Date</h4>
-                             <p style={{ fontSize: '0.75rem', color: '#b91c1c', margin: 0 }}>In 14 Days (Sept 24th)</p>
-                           </div>
-                         </div>
-                         <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', padding: '1rem', backgroundColor: '#eff6ff', borderRadius: '0.75rem', border: '1px solid #bfdbfe' }}>
-                           <div style={{ backgroundColor: 'white', padding: '0.5rem', borderRadius: '0.5rem', color: '#3b82f6' }}><Play size={20} /></div>
-                           <div>
-                             <h4 style={{ fontSize: '0.9rem', fontWeight: 700, color: '#1e3a8a', margin: '0 0 0.25rem 0' }}>Live Grammar Class</h4>
-                             <p style={{ fontSize: '0.75rem', color: '#1d4ed8', margin: 0 }}>Starts in 2 hours</p>
-                           </div>
-                         </div>
-                       </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                        <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#111827' }}>Action Items</h3>
+                        <Clock size={18} color="#9ca3af" />
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', padding: '1rem', backgroundColor: '#fef2f2', borderRadius: '0.75rem', border: '1px solid #fecaca' }}>
+                          <div style={{ backgroundColor: 'white', padding: '0.5rem', borderRadius: '0.5rem', color: '#ef4444' }}><Clock size={20} /></div>
+                          <div>
+                            <h4 style={{ fontSize: '0.9rem', fontWeight: 700, color: '#991b1b', margin: '0 0 0.25rem 0' }}>Actual Exam Date</h4>
+                            <p style={{ fontSize: '0.75rem', color: '#b91c1c', margin: 0 }}>In 14 Days (Sept 24th)</p>
+                          </div>
+                        </div>
+                        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', padding: '1rem', backgroundColor: '#eff6ff', borderRadius: '0.75rem', border: '1px solid #bfdbfe' }}>
+                          <div style={{ backgroundColor: 'white', padding: '0.5rem', borderRadius: '0.5rem', color: '#3b82f6' }}><Play size={20} /></div>
+                          <div>
+                            <h4 style={{ fontSize: '0.9rem', fontWeight: 700, color: '#1e3a8a', margin: '0 0 0.25rem 0' }}>Live Grammar Class</h4>
+                            <p style={{ fontSize: '0.75rem', color: '#1d4ed8', margin: 0 }}>Starts in 2 hours</p>
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </div>
 
@@ -1291,7 +1542,7 @@ export default function Dashboard() {
             boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
             position: 'relative'
           }}>
-            <button 
+            <button
               onClick={() => setIsAddStudentModalOpen(false)}
               style={{
                 position: 'absolute',
@@ -1327,7 +1578,7 @@ export default function Dashboard() {
                 <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, color: '#374151', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.5rem' }}>Password</label>
                 <div style={{ position: 'relative' }}>
                   <input type={showModalPassword ? "text" : "password"} value={newStudentPassword} onChange={(e) => setNewStudentPassword(e.target.value)} placeholder="••••••••" style={{ width: '100%', padding: '0.75rem 2.5rem 0.75rem 1rem', borderRadius: '0.5rem', border: '1.5px solid #e2e8f0', fontSize: '0.9rem', color: '#0f172a', backgroundColor: 'white', outline: 'none' }} />
-                  <button 
+                  <button
                     onClick={() => setShowModalPassword(!showModalPassword)}
                     style={{ position: 'absolute', right: '0.75rem', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#9ca3af', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}
                   >
@@ -1339,30 +1590,30 @@ export default function Dashboard() {
                 <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, color: '#374151', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.5rem' }}>Email</label>
                 <input type="email" value={newStudentEmail} onChange={(e) => setNewStudentEmail(e.target.value)} placeholder="name@example.com" style={{ width: '100%', padding: '0.75rem 1rem', borderRadius: '0.5rem', border: '1.5px solid #e2e8f0', fontSize: '0.9rem', color: '#0f172a', backgroundColor: 'white', outline: 'none' }} />
               </div>
-              
+
               <div style={{ gridColumn: hasPreviousScore === 'yes' ? 'span 1' : 'span 2', position: 'relative' }}>
                 <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, color: '#374151', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.5rem' }}>Previous IELTS Score</label>
-                <div 
+                <div
                   onClick={() => setIsScoreDropdownOpen(!isScoreDropdownOpen)}
-                  style={{ 
-                    width: '100%', padding: '0.75rem 1rem', borderRadius: '0.5rem', 
-                    border: '1.5px solid #e2e8f0', fontSize: '0.9rem', color: '#0f172a', 
-                    backgroundColor: 'white', cursor: 'pointer', display: 'flex', 
+                  style={{
+                    width: '100%', padding: '0.75rem 1rem', borderRadius: '0.5rem',
+                    border: '1.5px solid #e2e8f0', fontSize: '0.9rem', color: '#0f172a',
+                    backgroundColor: 'white', cursor: 'pointer', display: 'flex',
                     justifyContent: 'space-between', alignItems: 'center', userSelect: 'none'
                   }}
                 >
                   {hasPreviousScore === 'yes' ? 'Yes' : 'No'}
                   <ChevronDown size={16} color="#6b7280" />
                 </div>
-                
+
                 {isScoreDropdownOpen && (
                   <div style={{
-                    position: 'absolute', top: '100%', left: 0, right: 0, 
-                    marginTop: '0.25rem', backgroundColor: 'white', 
-                    border: '1.5px solid #e2e8f0', borderRadius: '0.5rem', 
+                    position: 'absolute', top: '100%', left: 0, right: 0,
+                    marginTop: '0.25rem', backgroundColor: 'white',
+                    border: '1.5px solid #e2e8f0', borderRadius: '0.5rem',
                     boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)', zIndex: 50, overflow: 'hidden'
                   }}>
-                    <div 
+                    <div
                       onClick={() => { setHasPreviousScore('no'); setIsScoreDropdownOpen(false); }}
                       onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f1f5f9'}
                       onMouseLeave={(e) => e.currentTarget.style.backgroundColor = hasPreviousScore === 'no' ? '#f8fafc' : 'white'}
@@ -1370,7 +1621,7 @@ export default function Dashboard() {
                     >
                       No
                     </div>
-                    <div 
+                    <div
                       onClick={() => { setHasPreviousScore('yes'); setIsScoreDropdownOpen(false); }}
                       onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f1f5f9'}
                       onMouseLeave={(e) => e.currentTarget.style.backgroundColor = hasPreviousScore === 'yes' ? '#f8fafc' : 'white'}
@@ -1390,26 +1641,26 @@ export default function Dashboard() {
               )}
             </div>
 
-            <button 
+            <button
               onClick={handleCreateStudent}
               disabled={isCreatingStudent}
               style={{
-              width: '100%',
-              padding: '0.875rem',
-              backgroundColor: isCreatingStudent ? '#4b5563' : '#111827',
-              color: 'white',
-              border: 'none',
-              borderRadius: '0.5rem',
-              fontSize: '0.85rem',
-              fontWeight: 700,
-              textTransform: 'uppercase',
-              letterSpacing: '0.05em',
-              cursor: isCreatingStudent ? 'not-allowed' : 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '0.5rem'
-            }}>
+                width: '100%',
+                padding: '0.875rem',
+                backgroundColor: isCreatingStudent ? '#4b5563' : '#111827',
+                color: 'white',
+                border: 'none',
+                borderRadius: '0.5rem',
+                fontSize: '0.85rem',
+                fontWeight: 700,
+                textTransform: 'uppercase',
+                letterSpacing: '0.05em',
+                cursor: isCreatingStudent ? 'not-allowed' : 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '0.5rem'
+              }}>
               {isCreatingStudent ? 'Creating...' : 'Create Student +'}
             </button>
           </div>
@@ -1535,7 +1786,7 @@ export default function Dashboard() {
           }}>
             {/* Header */}
             <div style={{ padding: '1.5rem', borderBottom: '1px solid #f3f4f6', position: 'relative' }}>
-              <button 
+              <button
                 onClick={() => setIsLogoutModalOpen(false)}
                 style={{ position: 'absolute', right: '1.5rem', top: '1.5rem', background: 'none', border: 'none', cursor: 'pointer', color: '#9ca3af' }}
               >
