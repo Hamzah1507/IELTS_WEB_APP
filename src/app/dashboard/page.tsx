@@ -39,6 +39,7 @@ export default function Dashboard() {
   const [userRole, setUserRole] = useState('trainer');
   const [userName, setUserName] = useState('Trainer');
   const [isLoading, setIsLoading] = useState(true);
+  const [authChecked, setAuthChecked] = useState(false);
   const [studentsList, setStudentsList] = useState<any[]>([]);
   const [extraPracticeFiles, setExtraPracticeFiles] = useState<{ id?: string, name: string, sizeBytes: number, type: string, url: string }[]>([]);
   const [extraRoadmapFiles, setExtraRoadmapFiles] = useState<{ id?: string, name: string, sizeBytes: number, type: string, url: string }[]>([]);
@@ -104,6 +105,7 @@ export default function Dashboard() {
           localStorage.setItem('dev_mock_name', user.user_metadata?.full_name || user.email?.split('@')[0] || 'Learner');
           setUserRole(role);
           setUserName(user.user_metadata?.full_name || user.email?.split('@')[0] || 'Learner');
+          setAuthChecked(true);
         } else {
           // No active Supabase session — clear stale cache and force login
           localStorage.removeItem('dev_mock_role');
@@ -116,8 +118,10 @@ export default function Dashboard() {
         // Network error — fall back to localStorage cache
         const mockRole = localStorage.getItem('dev_mock_role');
         const mockName = localStorage.getItem('dev_mock_name');
-        if (mockRole) setUserRole(mockRole);
-        else {
+        if (mockRole) {
+          setUserRole(mockRole);
+          setAuthChecked(true);
+        } else {
           router.replace('/');
           return;
         }
@@ -367,7 +371,10 @@ export default function Dashboard() {
     try {
       await supabase.auth.signOut();
     } finally {
-      window.location.href = '/';
+      localStorage.removeItem('dev_mock_role');
+      localStorage.removeItem('dev_mock_name');
+      localStorage.removeItem('activeTab');
+      router.replace('/');
     }
   };
 
@@ -487,6 +494,9 @@ export default function Dashboard() {
   );
 
   if (isLoading) return null;
+
+  // Do not render anything until auth check is complete — prevents flash on hard refresh
+  if (!authChecked) return null;
 
   return (
     <div style={{
