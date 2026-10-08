@@ -15,7 +15,7 @@ export async function GET(request: Request) {
     const content = await getMockTestContent(testId);
     
     if (!content.test) {
-        return NextResponse.json({ error: "Test not found" }, { status: 404 });
+        return NextResponse.json({ error: "Test not found in Google Drive folder" }, { status: 404 });
     }
 
     return NextResponse.json(content);

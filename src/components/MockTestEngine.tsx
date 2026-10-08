@@ -61,7 +61,15 @@ export default function MockTestEngine({ testId, onFinish }: { testId: string, o
 
         // Fetch Questions
         const resQ = await fetch(`/api/mock-test/questions?testId=${testId}`);
-        if (!resQ.ok) throw new Error("Failed to load questions");
+        if (!resQ.ok) {
+          let errMessage = "Failed to load questions";
+          try {
+            const errData = await resQ.json();
+            if (errData.error) errMessage += `: ${errData.error}`;
+            if (errData.details) errMessage += ` (${errData.details})`;
+          } catch (e) {}
+          throw new Error(errMessage);
+        }
         const dataQ = await resQ.json();
         setTestData(dataQ);
 
@@ -195,10 +203,6 @@ export default function MockTestEngine({ testId, onFinish }: { testId: string, o
         <AlertTriangle size={48} />
         <h2 style={{ fontSize: '1.5rem', fontWeight: 600 }}>Database Error</h2>
         <p style={{ maxWidth: '400px', textAlign: 'center', color: '#991b1b' }}>{error}</p>
-        <p style={{ fontSize: '0.85rem', color: '#b91c1c', marginTop: '1rem', textAlign: 'center' }}>
-          Please run this SQL command in Supabase to fix it:<br />
-          <code style={{ background: '#f87171', color: 'white', padding: '0.2rem 0.5rem', borderRadius: '0.25rem', display: 'block', marginTop: '0.5rem' }}>GRANT ALL PRIVILEGES ON TABLE public.mock_test_attempts TO service_role;</code>
-        </p>
       </div>
     );
   }

@@ -34,8 +34,8 @@ export async function getFileIdByName(fileName: string, parentFolderId: string):
       return files[0].id || null;
     }
     return null;
-  } catch (error) {
-    console.error(`Error finding ${fileName}:`, error);
+  } catch (error: any) {
+    console.error(`Error finding ${fileName}: Status=${error.status || error.code}, Message=${error.message}`);
     return null;
   }
 }
