@@ -1,0 +1,125 @@
+{
+  "R01-Q01": {
+    "correct": "False",
+    "acceptable": [
+      "F"
+    ]
+  },
+  "R01-Q02": {
+    "correct": "False",
+    "acceptable": [
+      "F"
+    ]
+  },
+  "R01-Q03": {
+    "correct": "True",
+    "acceptable": [
+      "T"
+    ]
+  },
+  "R01-Q04": {
+    "correct": "Not Given",
+    "acceptable": [
+      "NG"
+    ]
+  },
+  "R01-Q05": {
+    "correct": "B. It was unstable and hard to purify",
+    "acceptable": [
+      "B"
+    ]
+  },
+  "R01-Q06": {
+    "correct": "A. Howard Florey and Ernst Chain",
+    "acceptable": [
+      "A"
+    ]
+  },
+  "R01-Q07": {
+    "correct": "Second World War",
+    "acceptable": [
+      "World War 2",
+      "WWII"
+    ]
+  },
+  "R01-Q08": {
+    "correct": "antibiotics",
+    "acceptable": [
+      "antibiotic"
+    ]
+  },
+  "R01-Q09": {
+    "correct": "1928",
+    "acceptable": []
+  },
+  "R01-Q10": {
+    "correct": "staphylococcus",
+    "acceptable": [
+      "staph"
+    ]
+  },
+  "R02-Q11": {
+    "correct": "i. The origin of deep-sea exploration",
+    "acceptable": [
+      "i"
+    ]
+  },
+  "R02-Q12": {
+    "correct": "ii. A surprising discovery",
+    "acceptable": [
+      "ii"
+    ]
+  },
+  "R02-Q13": {
+    "correct": "iii. Technical limitations",
+    "acceptable": [
+      "iii"
+    ]
+  },
+  "R02-Q14": {
+    "correct": "A. Tectonic plate boundaries",
+    "acceptable": [
+      "A"
+    ]
+  },
+  "R02-Q15": {
+    "correct": "B. Chemosynthesis",
+    "acceptable": [
+      "B"
+    ]
+  },
+  "R02-Q16": {
+    "correct": "hull materials",
+    "acceptable": [
+      "hulls",
+      "metals"
+    ]
+  },
+  "R02-Q17": {
+    "correct": "hydrothermal vents",
+    "acceptable": [
+      "vents"
+    ]
+  },
+  "R02-Q18": {
+    "correct": "sunlight",
+    "acceptable": [
+      "light",
+      "the sun"
+    ]
+  },
+  "R02-Q19": {
+    "correct": "energy",
+    "acceptable": [
+      "food",
+      "nutrients"
+    ]
+  },
+  "R02-Q20": {
+    "correct": "hydrogen sulfide",
+    "acceptable": [
+      "sulfur",
+      "sulphide"
+    ]
+  }
+}

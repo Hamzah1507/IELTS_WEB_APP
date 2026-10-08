@@ -1,10 +1,5 @@
 'use client';
 
-import MockTestEngine from '@/components/MockTestEngine';
-import TestHistoryView from '@/components/dashboard/TestHistoryView';
-import AITutorView from '@/components/dashboard/AITutorView';
-import IeltsTemplatesView from '@/components/dashboard/IeltsTemplatesView';
-import IeltsCourseView from '@/components/dashboard/IeltsCourseView';
 import Image from 'next/image';
 import {
   LayoutDashboard, FileText, HelpCircle, Map, Clock,
@@ -102,10 +97,7 @@ export default function Dashboard() {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const { data: { session }, error } = await supabase.auth.getSession();
-        if (error) throw error;
-
-        const user = session?.user;
+        const { data: { user } } = await supabase.auth.getUser();
         if (user) {
           const role = user.email === 'trainer@vectragroup.com' ? 'trainer' : (user.user_metadata?.role || 'learner');
           // Store in localStorage so it's in sync
@@ -196,26 +188,10 @@ export default function Dashboard() {
       })
       .subscribe();
 
-    // ===== KEYBOARD SHORTCUT INTERCEPT =====
-    const handleKeyDown = async (e: KeyboardEvent) => {
-      if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'r') {
-        e.preventDefault();
-        try {
-          await supabase.auth.signOut();
-        } catch (err) { }
-        localStorage.removeItem('dev_mock_role');
-        localStorage.removeItem('dev_mock_name');
-        localStorage.removeItem('activeTab');
-        router.replace('/');
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-
     // Cleanup subscriptions when component unmounts
     return () => {
       supabase.removeChannel(studentsSubscription);
       supabase.removeChannel(materialsSubscription);
-      window.removeEventListener('keydown', handleKeyDown);
     };
   }, []);
 
@@ -535,6 +511,7 @@ export default function Dashboard() {
       flexDirection: 'column',
       fontFamily: "'Inter', sans-serif"
     }}>
+      {/* Top Navbar */}
       <header style={{
         display: 'flex',
         alignItems: 'center',
@@ -544,18 +521,15 @@ export default function Dashboard() {
         borderBottom: '1px solid #e5e7eb',
         flexShrink: 0
       }}>
-        <div style={{ display: 'flex', alignItems: 'center' }}>
-          <div style={{ display: 'flex', alignItems: 'center', paddingRight: '1.5rem', borderRight: '1px solid #e5e7eb', marginRight: '1.5rem' }}>
-            <Image src="/vfs_logo.png" alt="VFS Logo" width={320} height={80} style={{ objectFit: 'contain', filter: 'invert(1)', marginLeft: '-3.5rem', marginRight: '-7.5rem' }} priority />
-          </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
           <button
             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-            style={{ position: 'relative', zIndex: 10, background: 'none', border: 'none', cursor: 'pointer', color: '#475569', display: 'flex', alignItems: 'center', padding: '0.5rem', borderRadius: '0.25rem', transition: 'background-color 0.2s' }}
-            onMouseOver={e => e.currentTarget.style.backgroundColor = '#f1f5f9'}
-            onMouseOut={e => e.currentTarget.style.backgroundColor = 'transparent'}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#111827', display: 'flex', alignItems: 'center', padding: '0.25rem', borderRadius: '0.25rem' }}
           >
             <Menu size={24} />
           </button>
+          <Image src="/vfs_logo.png" alt="VFS Logo" width={320} height={80} style={{ objectFit: 'contain', filter: 'invert(1)' }} priority />
+
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
@@ -663,9 +637,7 @@ export default function Dashboard() {
           flex: 1,
           padding: '1.5rem 2rem',
           overflowY: 'auto',
-          backgroundColor: '#f5f6fa',
-          display: activeTab === 'Mock Test' ? 'flex' : 'block',
-          flexDirection: activeTab === 'Mock Test' ? 'column' : undefined
+          backgroundColor: '#f5f6fa'
         }} key={activeTab}>
           {activeTab === 'Practice Questions' ? (
             <div>
@@ -750,8 +722,377 @@ export default function Dashboard() {
               </div>
             </div>
           ) : activeTab === 'Mock Test' ? (
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, width: '100%' }}>
-              <MockTestEngine testId="TEST001" />
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '2rem' }}>
+                <div>
+                  <h1 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#111827', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <Clock size={24} /> Mock Test
+                  </h1>
+                  <p style={{ fontSize: '0.85rem', color: '#6b7280', marginTop: '0.25rem' }}>View and manage your mock tests.</p>
+                </div>
+              </div>
+              <div style={{ backgroundColor: 'white', color: '#111827', borderRadius: '1rem', overflow: 'hidden', display: 'flex', flexDirection: 'column', minHeight: '650px', fontFamily: 'system-ui, -apple-system, sans-serif', border: '1px solid #e2e8f0', boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.05)' }}>
+                <div style={{ padding: '1rem 2rem', backgroundColor: '#f8fafc', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <h3 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 600, color: '#0f172a' }}>PTE Academic Mock Test</h3>
+                  <span style={{ backgroundColor: '#e2e8f0', padding: '0.4rem 1rem', borderRadius: '999px', fontSize: '0.85rem', fontWeight: 600, color: '#475569' }}>
+                    Question {currentMockQuestionIndex + 1} of {mockQuestions.length}
+                  </span>
+                </div>
+
+                {showResultsScreen ? (
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 1, backgroundColor: '#f8fafc', position: 'relative' }}>
+                    <div style={{ width: '400px', padding: '3rem 2rem', borderRadius: '1.5rem', backgroundColor: 'white', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', alignItems: 'center', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.1)', animation: 'mock-pulse 2s infinite cubic-bezier(0.4, 0, 0.6, 1)' }}>
+                      <style>{`
+                        @keyframes mock-pulse {
+                          0%, 100% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0); border-color: #e2e8f0; }
+                          50% { box-shadow: 0 0 25px 5px rgba(99, 102, 241, 0.15); border-color: #a5b4fc; }
+                        }
+                      `}</style>
+                      <h2 style={{ color: '#1e293b', fontSize: '1.75rem', fontWeight: 800, margin: '0 0 0.5rem 0', textAlign: 'center' }}>Test Completed!</h2>
+                      <p style={{ color: '#64748b', fontSize: '1rem', margin: '0 0 2.5rem 0', textAlign: 'center' }}>Here is your final evaluation.</p>
+
+                      <div style={{ width: '160px', height: '160px', borderRadius: '1.5rem', backgroundColor: '#f0f9ff', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', marginBottom: '2rem', border: '2px solid #bae6fd' }}>
+                        <span style={{ color: '#3b82f6', fontSize: '0.85rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.5rem' }}>Total Score</span>
+                        <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.25rem' }}>
+                          <span style={{ color: '#0f172a', fontSize: '3.5rem', fontWeight: 800, lineHeight: 1 }}>
+                            {mockQuestions.reduce((acc, q, idx) => acc + (mockAnswers[idx]?.length === q.correctOptions.length && mockAnswers[idx].every(val => q.correctOptions.includes(val)) ? 1 : 0), 0)}
+                          </span>
+                          <span style={{ color: '#64748b', fontSize: '1.5rem', fontWeight: 700 }}>/ {mockQuestions.length}</span>
+                        </div>
+                      </div>
+
+                      <div style={{ display: 'flex', gap: '1rem', marginBottom: '2.5rem', width: '100%' }}>
+                        <div style={{ flex: 1, backgroundColor: '#ecfdf5', border: '1px solid #10b981', borderRadius: '1rem', padding: '0.75rem', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                          <span style={{ color: '#059669', fontSize: '1.5rem', fontWeight: 800 }}>{mockQuestions.reduce((acc, q, idx) => acc + (mockAnswers[idx]?.length === q.correctOptions.length && mockAnswers[idx].every(val => q.correctOptions.includes(val)) ? 1 : 0), 0)}</span>
+                          <span style={{ color: '#10b981', fontSize: '0.8rem', fontWeight: 700, textTransform: 'uppercase', marginTop: '0.25rem' }}>Accurate</span>
+                        </div>
+                        <div style={{ flex: 1, backgroundColor: '#fef2f2', border: '1px solid #ef4444', borderRadius: '1rem', padding: '0.75rem', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                          <span style={{ color: '#dc2626', fontSize: '1.5rem', fontWeight: 800 }}>{mockQuestions.length - mockQuestions.reduce((acc, q, idx) => acc + (mockAnswers[idx]?.length === q.correctOptions.length && mockAnswers[idx].every(val => q.correctOptions.includes(val)) ? 1 : 0), 0)}</span>
+                          <span style={{ color: '#ef4444', fontSize: '0.8rem', fontWeight: 700, textTransform: 'uppercase', marginTop: '0.25rem' }}>Incorrect</span>
+                        </div>
+                      </div>
+
+                      <button
+                        onClick={() => setShowResultsScreen(false)}
+                        style={{ backgroundColor: '#6366f1', color: 'white', border: 'none', padding: '1rem 2.5rem', borderRadius: '0.75rem', fontSize: '1.1rem', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s', width: '100%', boxShadow: '0 4px 14px 0 rgba(99,102,241,0.39)' }}
+                      >
+                        Review Answers
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', flex: 1 }}>
+                    {/* Left pane: Text */}
+                    <div style={{ padding: '2.5rem', borderRight: '1px solid #e2e8f0', overflowY: 'auto' }}>
+                      <p style={{ color: '#64748b', fontSize: '0.9rem', marginBottom: '1.5rem', lineHeight: 1.5, fontWeight: 500 }}>
+                        {mockQuestions[currentMockQuestionIndex].prompt}
+                      </p>
+                      {mockQuestions[currentMockQuestionIndex].text.split('\n\n').map((paragraph, i) => (
+                        <p key={i} style={{ fontSize: '1.05rem', lineHeight: 1.7, marginBottom: '1.5rem', color: '#334155' }}>
+                          {paragraph}
+                        </p>
+                      ))}
+                    </div>
+
+                    {/* Right pane: Questions */}
+                    <div style={{ padding: '2.5rem', display: 'flex', flexDirection: 'column', backgroundColor: '#f8fafc' }}>
+                      <h4 style={{ fontSize: '1.15rem', fontWeight: 700, color: '#0f172a', marginBottom: '1.5rem', lineHeight: 1.5 }}>
+                        {mockQuestions[currentMockQuestionIndex].question}
+                      </h4>
+
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', flex: 1 }}>
+                        {mockQuestions[currentMockQuestionIndex].options.map((opt, idx) => {
+                          const isSelected = mockAnswers[currentMockQuestionIndex].includes(idx);
+                          const isCorrect = mockQuestions[currentMockQuestionIndex].correctOptions.includes(idx);
+                          let borderStyle = '1px solid #cbd5e1';
+                          let bgStyle = isSelected ? '#f0f9ff' : 'white';
+                          let textColor = isSelected ? '#0f172a' : '#475569';
+
+                          if (isSelected) borderStyle = '1px solid #3b82f6';
+
+                          if (isMockSubmitted) {
+                            if (isCorrect) {
+                              borderStyle = '1px solid #10b981'; // Green
+                              bgStyle = isSelected ? '#ecfdf5' : '#f0fdf4';
+                              textColor = '#065f46';
+                            } else if (isSelected && !isCorrect) {
+                              borderStyle = '1px solid #ef4444'; // Red
+                              bgStyle = '#fef2f2';
+                              textColor = '#991b1b';
+                            }
+                          }
+
+                          return (
+                            <button
+                              key={idx}
+                              onClick={() => {
+                                if (isMockSubmitted) return;
+                                setMockAnswers(prev => {
+                                  const newAnswers = [...prev];
+                                  newAnswers[currentMockQuestionIndex] = [idx];
+                                  return newAnswers;
+                                });
+                              }}
+                              style={{
+                                display: 'flex', alignItems: 'center', gap: '1rem', padding: '1.25rem 1.5rem',
+                                borderRadius: '0.75rem', backgroundColor: bgStyle, border: borderStyle,
+                                color: textColor, cursor: isMockSubmitted ? 'default' : 'pointer', textAlign: 'left',
+                                transition: 'all 0.2s ease',
+                                outline: 'none',
+                                boxShadow: isSelected && !isMockSubmitted ? '0 4px 14px -4px rgba(59, 130, 246, 0.3)' : '0 1px 2px 0 rgba(0, 0, 0, 0.05)'
+                              }}
+                              onMouseOver={e => {
+                                if (!isMockSubmitted) {
+                                  e.currentTarget.style.backgroundColor = isSelected ? '#f0f9ff' : '#f8fafc';
+                                  if (!isSelected) e.currentTarget.style.border = '1px solid #94a3b8';
+                                }
+                              }}
+                              onMouseOut={e => {
+                                if (!isMockSubmitted) {
+                                  e.currentTarget.style.backgroundColor = isSelected ? '#f0f9ff' : 'white';
+                                  if (!isSelected) e.currentTarget.style.border = '1px solid #cbd5e1';
+                                }
+                              }}
+                            >
+                              <div style={{ width: '24px', height: '24px', border: `2px solid ${isMockSubmitted && isCorrect ? '#10b981' : (isMockSubmitted && isSelected && !isCorrect) ? '#ef4444' : isSelected ? '#3b82f6' : '#cbd5e1'}`, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: isSelected && !isMockSubmitted ? '#3b82f6' : 'transparent', flexShrink: 0, transition: 'all 0.2s ease' }}>
+                                {isSelected && !isMockSubmitted && <div style={{ width: '10px', height: '10px', backgroundColor: 'white', borderRadius: '50%' }} />}
+                                {isMockSubmitted && isCorrect && <span style={{ color: '#10b981', fontSize: '16px', lineHeight: 1, fontWeight: 'bold' }}>✓</span>}
+                                {isMockSubmitted && isSelected && !isCorrect && <span style={{ color: '#ef4444', fontSize: '14px', lineHeight: 1, fontWeight: 'bold' }}>✕</span>}
+                              </div>
+                              <span style={{ fontSize: '1.05rem', lineHeight: 1.5, fontWeight: isSelected ? 600 : 400 }}>{opt}</span>
+                            </button>
+                          )
+                        })}
+                      </div>
+
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '2.5rem', paddingTop: '1.5rem', borderTop: '1px solid #e2e8f0' }}>
+                        <div style={{ display: 'flex', alignItems: 'center' }}>
+                          {isMockSubmitted && (
+                            <div style={{ padding: '0.5rem 1rem', borderRadius: '0.5rem', backgroundColor: mockAnswers[currentMockQuestionIndex].every(a => mockQuestions[currentMockQuestionIndex].correctOptions.includes(a)) && mockAnswers[currentMockQuestionIndex].length === mockQuestions[currentMockQuestionIndex].correctOptions.length ? 'rgba(34, 197, 94, 0.1)' : 'rgba(239, 68, 68, 0.1)', color: mockAnswers[currentMockQuestionIndex].every(a => mockQuestions[currentMockQuestionIndex].correctOptions.includes(a)) && mockAnswers[currentMockQuestionIndex].length === mockQuestions[currentMockQuestionIndex].correctOptions.length ? '#22c55e' : '#ef4444', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                              {mockAnswers[currentMockQuestionIndex].every(a => mockQuestions[currentMockQuestionIndex].correctOptions.includes(a)) && mockAnswers[currentMockQuestionIndex].length === mockQuestions[currentMockQuestionIndex].correctOptions.length ? '✅ Perfect! All correct.' : '❌ Incorrect. Review highlighted answers.'}
+                            </div>
+                          )}
+                        </div>
+
+                        <div style={{ display: 'flex', gap: '1rem' }}>
+                          <button
+                            onClick={() => {
+                              if (currentMockQuestionIndex > 0) {
+                                setCurrentMockQuestionIndex(prev => prev - 1);
+                              }
+                            }}
+                            disabled={currentMockQuestionIndex === 0}
+                            style={{ backgroundColor: currentMockQuestionIndex > 0 ? 'white' : '#f8fafc', color: currentMockQuestionIndex > 0 ? '#475569' : '#94a3b8', border: '1px solid #cbd5e1', padding: '0.85rem 1.75rem', borderRadius: '0.75rem', fontWeight: 600, cursor: currentMockQuestionIndex > 0 ? 'pointer' : 'not-allowed', transition: 'all 0.2s', boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)' }}
+                          >
+                            Previous
+                          </button>
+
+                          {currentMockQuestionIndex === mockQuestions.length - 1 ? (
+                            isMockSubmitted ? (
+                              <button
+                                onClick={() => {
+                                  setCurrentMockQuestionIndex(0);
+                                  setMockAnswers(mockQuestions.map(() => []));
+                                  setIsMockSubmitted(false);
+                                }}
+                                style={{ backgroundColor: '#6366f1', color: 'white', border: 'none', padding: '0.85rem 1.75rem', borderRadius: '0.5rem', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 4px 14px 0 rgba(99,102,241,0.39)' }}
+                              >
+                                Retake Test
+                              </button>
+                            ) : (
+                              <button
+                                onClick={() => {
+                                  setIsMockSubmitted(true);
+                                  setShowResultsScreen(true);
+                                }}
+                                disabled={mockAnswers[currentMockQuestionIndex].length === 0}
+                                style={{ backgroundColor: mockAnswers[currentMockQuestionIndex].length > 0 ? '#3b82f6' : '#e2e8f0', color: mockAnswers[currentMockQuestionIndex].length > 0 ? 'white' : '#94a3b8', border: 'none', padding: '0.85rem 2rem', borderRadius: '0.75rem', fontWeight: 600, cursor: mockAnswers[currentMockQuestionIndex].length > 0 ? 'pointer' : 'not-allowed', transition: 'all 0.2s', boxShadow: mockAnswers[currentMockQuestionIndex].length > 0 ? '0 4px 14px -4px rgba(59, 130, 246, 0.4)' : 'none' }}
+                              >
+                                Submit Test
+                              </button>
+                            )
+                          ) : (
+                            <button
+                              onClick={() => {
+                                setCurrentMockQuestionIndex(prev => prev + 1);
+                              }}
+                              disabled={!isMockSubmitted && mockAnswers[currentMockQuestionIndex].length === 0}
+                              style={{ backgroundColor: (!isMockSubmitted && mockAnswers[currentMockQuestionIndex].length === 0) ? '#e2e8f0' : '#3b82f6', color: (!isMockSubmitted && mockAnswers[currentMockQuestionIndex].length === 0) ? '#94a3b8' : 'white', border: 'none', padding: '0.85rem 2rem', borderRadius: '0.75rem', fontWeight: 600, cursor: (!isMockSubmitted && mockAnswers[currentMockQuestionIndex].length === 0) ? 'not-allowed' : 'pointer', transition: 'all 0.2s', boxShadow: (!isMockSubmitted && mockAnswers[currentMockQuestionIndex].length === 0) ? 'none' : '0 4px 14px -4px rgba(59, 130, 246, 0.4)' }}
+                            >
+                              Next Question
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          ) : activeTab === 'Add Students' && userRole === 'trainer' ? (
+            /* ===== ADD STUDENTS VIEW ===== */
+            <div>
+              {/* Header */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem' }}>
+                <div>
+                  <h1 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#111827', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <UserPlus size={24} /> Students Directory
+                  </h1>
+                  <p style={{ fontSize: '0.85rem', color: '#6b7280', marginTop: '0.25rem' }}>Manage and view all student details</p>
+                </div>
+                <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+                  <button
+                    onClick={() => setIsAddStudentModalOpen(true)}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: '0.5rem',
+                      padding: '0.6rem 1.25rem', borderRadius: '0.5rem',
+                      backgroundColor: '#111827', color: 'white', border: 'none',
+                      fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer'
+                    }}>
+                    + Add Student
+                  </button>
+                  <div style={{ position: 'relative' }}>
+                    <input
+                      type="text"
+                      placeholder="Search students..."
+                      style={{
+                        padding: '0.6rem 1rem 0.6rem 2.25rem',
+                        borderRadius: '0.5rem',
+                        border: '1px solid #d1d5db',
+                        fontSize: '0.85rem',
+                        outline: 'none',
+                        width: '220px',
+                        backgroundColor: 'white'
+                      }}
+                    />
+                    <span style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: '#9ca3af', fontSize: '0.85rem' }}>🔍</span>
+                  </div>
+                  <select style={{
+                    padding: '0.6rem 1rem',
+                    borderRadius: '0.5rem',
+                    border: '1px solid #d1d5db',
+                    fontSize: '0.85rem',
+                    backgroundColor: 'white',
+                    color: '#374151',
+                    cursor: 'pointer'
+                  }}>
+                    <option>Filter: All</option>
+                    <option>Active</option>
+                    <option>Inactive</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Table */}
+              <div style={{
+                backgroundColor: 'white',
+                borderRadius: '0.75rem',
+                border: '1px solid #e5e7eb',
+                overflow: 'visible'
+              }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                  <thead>
+                    <tr style={{ backgroundColor: '#f9fafb', borderBottom: '1px solid #e5e7eb' }}>
+                      <th style={{ padding: '0.85rem 1.25rem', textAlign: 'left', fontSize: '0.75rem', fontWeight: 600, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                        <input type="checkbox" style={{ marginRight: '0.75rem' }} />
+                        Student Name
+                      </th>
+                      <th style={{ padding: '0.85rem 1.25rem', textAlign: 'left', fontSize: '0.75rem', fontWeight: 600, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Student ID</th>
+                      <th style={{ padding: '0.85rem 1.25rem', textAlign: 'left', fontSize: '0.75rem', fontWeight: 600, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Batch</th>
+                      <th style={{ padding: '0.85rem 1.25rem', textAlign: 'left', fontSize: '0.75rem', fontWeight: 600, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Course</th>
+                      <th style={{ padding: '0.85rem 1.25rem', textAlign: 'left', fontSize: '0.75rem', fontWeight: 600, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Status</th>
+                      <th style={{ padding: '0.85rem 1.25rem', textAlign: 'right', fontSize: '0.75rem', fontWeight: 600, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {studentsList.length === 0 ? (
+                      <tr>
+                        <td colSpan={6} style={{ padding: '3rem', textAlign: 'center', color: '#9ca3af' }}>
+                          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.75rem' }}>
+                            <UserPlus size={48} color="#d1d5db" />
+                            <p style={{ fontSize: '1rem', fontWeight: 600, color: '#6b7280' }}>No students added yet</p>
+                            <p style={{ fontSize: '0.85rem', color: '#9ca3af' }}>Click &quot;+ Add Student&quot; to add your first student</p>
+                          </div>
+                        </td>
+                      </tr>
+                    ) : (
+                      studentsList.map((student, idx) => (
+                        <tr key={idx} style={{ borderBottom: '1px solid #f3f4f6' }}>
+                          <td style={{ padding: '1rem 1.25rem', fontSize: '0.85rem', color: '#111827', fontWeight: 500 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                              <input type="checkbox" />
+                              <div
+                                onClick={() => setSelectedStudent(student)}
+                                style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: '#eef2ff', color: '#4f46e5', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 600, fontSize: '0.8rem', cursor: 'pointer' }}
+                              >
+                                {student.name.charAt(0).toUpperCase()}
+                              </div>
+                              <span
+                                onClick={() => setSelectedStudent(student)}
+                                style={{ cursor: 'pointer', color: '#111827' }}
+                                onMouseOver={(e) => e.currentTarget.style.color = '#4f46e5'}
+                                onMouseOut={(e) => e.currentTarget.style.color = '#111827'}
+                              >{student.name}</span>
+                            </div>
+                          </td>
+                          <td style={{ padding: '1rem 1.25rem', fontSize: '0.85rem', color: '#6b7280' }}>{student.id}</td>
+                          <td style={{ padding: '1rem 1.25rem', fontSize: '0.85rem', color: '#6b7280' }}>{student.batch}</td>
+                          <td style={{ padding: '1rem 1.25rem', fontSize: '0.85rem', color: '#6b7280' }}>{student.course}</td>
+                          <td style={{ padding: '1rem 1.25rem', fontSize: '0.85rem' }}>
+                            <span style={{ padding: '0.25rem 0.75rem', borderRadius: '999px', backgroundColor: '#dcfce7', color: '#166534', fontSize: '0.75rem', fontWeight: 600 }}>{student.status}</span>
+                          </td>
+                          <td style={{ padding: '1rem 1.25rem', textAlign: 'right', position: 'relative' }}>
+                            <button
+                              onClick={() => setOpenStudentMenu(openStudentMenu === idx ? null : idx)}
+                              style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#6b7280', fontSize: '1.2rem', padding: '0.25rem 0.5rem' }}
+                            >•••</button>
+                            {openStudentMenu === idx && (
+                              <div style={{
+                                position: 'absolute', right: '1.25rem', top: '100%', backgroundColor: 'white',
+                                border: '1px solid #e5e7eb', borderRadius: '0.5rem', boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                                zIndex: 50, minWidth: '140px', overflow: 'hidden'
+                              }}>
+                                <button
+                                  onClick={() => { setSelectedStudent(student); setOpenStudentMenu(null); }}
+                                  style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', width: '100%', padding: '0.6rem 0.75rem', border: 'none', backgroundColor: 'white', color: '#111827', fontSize: '0.8rem', fontWeight: 500, cursor: 'pointer', textAlign: 'left' }}
+                                  onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f9fafb'}
+                                  onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'white'}
+                                >👤 View Profile</button>
+                                <button
+                                  onClick={() => { setEditingStudent({ student, idx }); setEditPhone(student.phone || ''); setEditEmail(student.email || ''); setOpenStudentMenu(null); }}
+                                  style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', width: '100%', padding: '0.6rem 0.75rem', border: 'none', backgroundColor: 'white', color: '#111827', fontSize: '0.8rem', fontWeight: 500, cursor: 'pointer', textAlign: 'left' }}
+                                  onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f9fafb'}
+                                  onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'white'}
+                                >✏️ Edit Details</button>
+                                <button
+                                  onClick={async () => {
+                                    // Remove from UI and localStorage instantly
+                                    setStudentsList(prev => {
+                                      const updated = prev.filter((_, i) => i !== idx);
+                                      localStorage.setItem('dev_mock_students', JSON.stringify(updated));
+                                      return updated;
+                                    });
+                                    setOpenStudentMenu(null);
+                                    // Also delete from Supabase database
+                                    try {
+                                      await supabase.from('students').delete().eq('student_id', student.id);
+                                    } catch (e) {
+                                      // Supabase unreachable — removed from local only
+                                    }
+                                  }}
+                                  style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', width: '100%', padding: '0.6rem 0.75rem', border: 'none', backgroundColor: 'white', color: '#ef4444', fontSize: '0.8rem', fontWeight: 500, cursor: 'pointer', textAlign: 'left' }}
+                                  onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#fef2f2'}
+                                  onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'white'}
+                                >🗑 Delete</button>
+                              </div>
+                            )}
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
             </div>
           ) : activeTab === 'Test History' ? (
             <div>
@@ -891,91 +1232,6 @@ export default function Dashboard() {
                 <p style={{ fontSize: '1rem', fontWeight: 600, color: '#111827' }}>Course Content Locked</p>
                 <p style={{ fontSize: '0.85rem', color: '#6b7280', marginTop: '0.25rem', maxWidth: '400px', margin: '0.25rem auto 1.5rem auto' }}>You are currently on the standard plan. Upgrade to access premium video lectures and guided courses.</p>
                 <button style={{ backgroundColor: '#f59e0b', color: 'white', border: 'none', padding: '0.6rem 1.25rem', borderRadius: '0.5rem', fontWeight: 600, cursor: 'pointer' }}>Upgrade Plan</button>
-              </div>
-            </div>
-          ) : activeTab === 'Add Students' && userRole === 'trainer' ? (
-            <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-                <div>
-                  <h1 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#111827', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <UserPlus size={24} /> Student Directory
-                  </h1>
-                  <p style={{ fontSize: '0.85rem', color: '#6b7280', marginTop: '0.25rem' }}>Manage your active student roster and track their progress.</p>
-                </div>
-                <button
-                  onClick={() => setIsAddStudentModalOpen(true)}
-                  style={{
-                    backgroundColor: '#111827', color: 'white', border: 'none', padding: '0.6rem 1.25rem',
-                    borderRadius: '0.5rem', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer',
-                    display: 'flex', alignItems: 'center', gap: '0.5rem', transition: 'transform 0.2s',
-                    boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)'
-                  }}
-                  onMouseOver={e => e.currentTarget.style.transform = 'translateY(-1px)'}
-                  onMouseOut={e => e.currentTarget.style.transform = 'none'}
-                >
-                  <UserPlus size={16} /> + Add New Student
-                </button>
-              </div>
-
-              <div style={{ backgroundColor: 'white', borderRadius: '1rem', border: '1px solid #e5e7eb', overflow: 'hidden', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)' }}>
-                {studentsList.length > 0 ? (
-                  <div style={{ overflowX: 'auto' }}>
-                    <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-                      <thead>
-                        <tr style={{ backgroundColor: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
-                          <th style={{ padding: '1rem 1.5rem', fontSize: '0.75rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Student Profile</th>
-                          <th style={{ padding: '1rem 1.5rem', fontSize: '0.75rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Course Track</th>
-                          <th style={{ padding: '1rem 1.5rem', fontSize: '0.75rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Status</th>
-                          <th style={{ padding: '1rem 1.5rem', fontSize: '0.75rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'right' }}>Action</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {[...studentsList].reverse().map((student, i) => (
-                          <tr key={i} style={{ borderBottom: i === studentsList.length - 1 ? 'none' : '1px solid #f1f5f9', transition: 'background-color 0.2s' }} onMouseOver={e => { e.currentTarget.style.backgroundColor = '#f8fafc'; }} onMouseOut={e => { e.currentTarget.style.backgroundColor = 'transparent'; }}>
-                            <td style={{ padding: '1rem 1.5rem' }}>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                                <div style={{ width: '38px', height: '38px', borderRadius: '50%', background: 'linear-gradient(135deg, #1e1b4b 0%, #4338ca 100%)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '1rem', boxShadow: '0 2px 4px rgba(67, 56, 202, 0.2)' }}>
-                                  {student.name ? student.name.charAt(0).toUpperCase() : 'S'}
-                                </div>
-                                <div>
-                                  <p style={{ margin: 0, fontWeight: 700, color: '#1e293b', fontSize: '0.9rem' }}>{student.name}</p>
-                                  <p style={{ margin: 0, color: '#64748b', fontSize: '0.75rem', marginTop: '0.1rem' }}>{student.email || student.id}</p>
-                                </div>
-                              </div>
-                            </td>
-                            <td style={{ padding: '1rem 1.5rem' }}>
-                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', padding: '0.3rem 0.6rem', borderRadius: '999px', fontSize: '0.75rem', fontWeight: 600, backgroundColor: '#f1f5f9', color: '#475569', border: '1px solid #e2e8f0' }}>
-                                <BookOpen size={12} /> {student.course || 'IELTS Academic'}
-                              </span>
-                            </td>
-                            <td style={{ padding: '1rem 1.5rem' }}>
-                              <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', padding: '0.3rem 0.6rem', borderRadius: '999px', backgroundColor: '#ecfdf5', border: '1px solid #d1fae5' }}>
-                                <div style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#10b981' }}></div>
-                                <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#065f46' }}>Active</span>
-                              </div>
-                            </td>
-                            <td style={{ padding: '1rem 1.5rem', textAlign: 'right' }}>
-                              <button onClick={() => setSelectedStudent(student)} style={{ background: 'none', border: 'none', color: '#6366f1', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer', padding: '0.4rem 0.8rem', borderRadius: '0.25rem' }} onMouseOver={e => e.currentTarget.style.backgroundColor = '#e0e7ff'} onMouseOut={e => e.currentTarget.style.backgroundColor = 'transparent'}>
-                                View Profile
-                              </button>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                ) : (
-                  <div style={{ padding: '4rem 2rem', textAlign: 'center' }}>
-                    <div style={{ width: '56px', height: '56px', borderRadius: '50%', backgroundColor: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.25rem auto' }}>
-                      <UserPlus size={28} color="#94a3b8" />
-                    </div>
-                    <h4 style={{ fontSize: '1.15rem', fontWeight: 700, color: '#1e293b', margin: '0 0 0.5rem 0' }}>No Students Enrolled</h4>
-                    <p style={{ margin: '0 auto 1.5rem auto', color: '#64748b', fontSize: '0.85rem', maxWidth: '280px', lineHeight: 1.5 }}>Your roster is currently empty. Start by adding your first student.</p>
-                    <button onClick={() => setIsAddStudentModalOpen(true)} style={{ backgroundColor: '#0f172a', color: 'white', border: 'none', padding: '0.6rem 1.5rem', borderRadius: '0.5rem', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '0.5rem', transition: 'transform 0.2s', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }} onMouseOver={e => e.currentTarget.style.transform = 'translateY(-1px)'} onMouseOut={e => e.currentTarget.style.transform = 'none'}>
-                      <UserPlus size={16} /> Register Student
-                    </button>
-                  </div>
-                )}
               </div>
             </div>
           ) : (

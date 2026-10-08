@@ -1,0 +1,15 @@
+{
+  "total_questions": 40,
+  "listening_questions": 20,
+  "listening_part_1_questions": 5,
+  "reading_questions": 20,
+  "writing_tasks": 2,
+  "speaking_questions": 10,
+  "total_duration": 90,
+  "duplicate_ids": 0,
+  "missing_answers": 0,
+  "ambiguous_questions": 0,
+  "validation_status": "PASS",
+  "valid_question_types": true,
+  "valid_answer_keys": true
+}

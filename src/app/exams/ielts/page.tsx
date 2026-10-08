@@ -31,7 +31,7 @@ export default function IeltsDashboard() {
                   <span>4 Modules</span>
                 </div>
               </div>
-              <Link href="/test/ielts-academic-1" className="btn-primary flex items-center gap-2">
+              <Link href="/test/TEST001" className="btn-primary flex items-center gap-2">
                 <PlayCircle size={18} /> Start Test
               </Link>
             </div>

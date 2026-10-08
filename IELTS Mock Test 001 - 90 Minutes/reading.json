@@ -1,0 +1,226 @@
+[
+  {
+    "question_id": "R01-Q01",
+    "passage_id": "P1",
+    "type": "true_false_not_given",
+    "question": "The discovery of penicillin was entirely planned.",
+    "options": [
+      "True",
+      "False",
+      "Not Given"
+    ],
+    "difficulty": "medium",
+    "passage_text": "The Accidental Discovery of Penicillin\n\nIn 1928, the world of medicine was changed forever by a Scottish researcher named Alexander Fleming. His discovery of the world's first widely effective antibiotic, penicillin, was not the result of a meticulously planned experiment, but rather a stroke of incredible luck. Upon returning from a vacation, Fleming noticed that a petri dish containing staphylococcus bacteria had been left uncovered. A rare strain of mold had grown on the dish, and surrounding the mold was a clear ring where the bacteria had been completely destroyed. This chance observation led to the identification of the mold's antibacterial properties.\n\nDespite his groundbreaking discovery, Fleming struggled to isolate the active substance and produce it in large quantities. The main challenge in the early days of penicillin was stabilizing the drug so it could be mass-produced for medical use. It wasn't until a decade later that two scientists at Oxford University, Howard Florey and Ernst Chain, managed to purify penicillin. Their work successfully stabilized the drug for mass production, fundamentally transforming modern medicine.\n\nThe timing of this breakthrough was historically significant. The mass production of penicillin was crucial during the Second World War, saving countless soldiers from dying of infected wounds. Because of its incredible ability to combat bacterial infections, penicillin belongs to a group of drugs known as antibiotics. In recognition of their monumental contributions, Fleming, Florey, and Chain jointly received the Nobel Prize in Medicine in 1945, many years after the initial discovery."
+  },
+  {
+    "question_id": "R01-Q02",
+    "passage_id": "P1",
+    "type": "true_false_not_given",
+    "question": "Alexander Fleming was the first to mass-produce the antibiotic.",
+    "options": [
+      "True",
+      "False",
+      "Not Given"
+    ],
+    "difficulty": "medium",
+    "passage_text": "The Accidental Discovery of Penicillin\n\nIn 1928, the world of medicine was changed forever by a Scottish researcher named Alexander Fleming. His discovery of the world's first widely effective antibiotic, penicillin, was not the result of a meticulously planned experiment, but rather a stroke of incredible luck. Upon returning from a vacation, Fleming noticed that a petri dish containing staphylococcus bacteria had been left uncovered. A rare strain of mold had grown on the dish, and surrounding the mold was a clear ring where the bacteria had been completely destroyed. This chance observation led to the identification of the mold's antibacterial properties.\n\nDespite his groundbreaking discovery, Fleming struggled to isolate the active substance and produce it in large quantities. The main challenge in the early days of penicillin was stabilizing the drug so it could be mass-produced for medical use. It wasn't until a decade later that two scientists at Oxford University, Howard Florey and Ernst Chain, managed to purify penicillin. Their work successfully stabilized the drug for mass production, fundamentally transforming modern medicine.\n\nThe timing of this breakthrough was historically significant. The mass production of penicillin was crucial during the Second World War, saving countless soldiers from dying of infected wounds. Because of its incredible ability to combat bacterial infections, penicillin belongs to a group of drugs known as antibiotics. In recognition of their monumental contributions, Fleming, Florey, and Chain jointly received the Nobel Prize in Medicine in 1945, many years after the initial discovery."
+  },
+  {
+    "question_id": "R01-Q03",
+    "passage_id": "P1",
+    "type": "true_false_not_given",
+    "question": "The mold was found growing on a petri dish of staphylococcus.",
+    "options": [
+      "True",
+      "False",
+      "Not Given"
+    ],
+    "difficulty": "medium",
+    "passage_text": "The Accidental Discovery of Penicillin\n\nIn 1928, the world of medicine was changed forever by a Scottish researcher named Alexander Fleming. His discovery of the world's first widely effective antibiotic, penicillin, was not the result of a meticulously planned experiment, but rather a stroke of incredible luck. Upon returning from a vacation, Fleming noticed that a petri dish containing staphylococcus bacteria had been left uncovered. A rare strain of mold had grown on the dish, and surrounding the mold was a clear ring where the bacteria had been completely destroyed. This chance observation led to the identification of the mold's antibacterial properties.\n\nDespite his groundbreaking discovery, Fleming struggled to isolate the active substance and produce it in large quantities. The main challenge in the early days of penicillin was stabilizing the drug so it could be mass-produced for medical use. It wasn't until a decade later that two scientists at Oxford University, Howard Florey and Ernst Chain, managed to purify penicillin. Their work successfully stabilized the drug for mass production, fundamentally transforming modern medicine.\n\nThe timing of this breakthrough was historically significant. The mass production of penicillin was crucial during the Second World War, saving countless soldiers from dying of infected wounds. Because of its incredible ability to combat bacterial infections, penicillin belongs to a group of drugs known as antibiotics. In recognition of their monumental contributions, Fleming, Florey, and Chain jointly received the Nobel Prize in Medicine in 1945, many years after the initial discovery."
+  },
+  {
+    "question_id": "R01-Q04",
+    "passage_id": "P1",
+    "type": "true_false_not_given",
+    "question": "Fleming received the Nobel Prize immediately after his discovery.",
+    "options": [
+      "True",
+      "False",
+      "Not Given"
+    ],
+    "difficulty": "hard",
+    "passage_text": "The Accidental Discovery of Penicillin\n\nIn 1928, the world of medicine was changed forever by a Scottish researcher named Alexander Fleming. His discovery of the world's first widely effective antibiotic, penicillin, was not the result of a meticulously planned experiment, but rather a stroke of incredible luck. Upon returning from a vacation, Fleming noticed that a petri dish containing staphylococcus bacteria had been left uncovered. A rare strain of mold had grown on the dish, and surrounding the mold was a clear ring where the bacteria had been completely destroyed. This chance observation led to the identification of the mold's antibacterial properties.\n\nDespite his groundbreaking discovery, Fleming struggled to isolate the active substance and produce it in large quantities. The main challenge in the early days of penicillin was stabilizing the drug so it could be mass-produced for medical use. It wasn't until a decade later that two scientists at Oxford University, Howard Florey and Ernst Chain, managed to purify penicillin. Their work successfully stabilized the drug for mass production, fundamentally transforming modern medicine.\n\nThe timing of this breakthrough was historically significant. The mass production of penicillin was crucial during the Second World War, saving countless soldiers from dying of infected wounds. Because of its incredible ability to combat bacterial infections, penicillin belongs to a group of drugs known as antibiotics. In recognition of their monumental contributions, Fleming, Florey, and Chain jointly received the Nobel Prize in Medicine in 1945, many years after the initial discovery."
+  },
+  {
+    "question_id": "R01-Q05",
+    "passage_id": "P1",
+    "type": "multiple_choice",
+    "question": "What was the main challenge in the early days of penicillin?",
+    "options": [
+      "A. It was toxic to humans",
+      "B. It was unstable and hard to purify",
+      "C. Doctors refused to use it"
+    ],
+    "difficulty": "hard",
+    "passage_text": "The Accidental Discovery of Penicillin\n\nIn 1928, the world of medicine was changed forever by a Scottish researcher named Alexander Fleming. His discovery of the world's first widely effective antibiotic, penicillin, was not the result of a meticulously planned experiment, but rather a stroke of incredible luck. Upon returning from a vacation, Fleming noticed that a petri dish containing staphylococcus bacteria had been left uncovered. A rare strain of mold had grown on the dish, and surrounding the mold was a clear ring where the bacteria had been completely destroyed. This chance observation led to the identification of the mold's antibacterial properties.\n\nDespite his groundbreaking discovery, Fleming struggled to isolate the active substance and produce it in large quantities. The main challenge in the early days of penicillin was stabilizing the drug so it could be mass-produced for medical use. It wasn't until a decade later that two scientists at Oxford University, Howard Florey and Ernst Chain, managed to purify penicillin. Their work successfully stabilized the drug for mass production, fundamentally transforming modern medicine.\n\nThe timing of this breakthrough was historically significant. The mass production of penicillin was crucial during the Second World War, saving countless soldiers from dying of infected wounds. Because of its incredible ability to combat bacterial infections, penicillin belongs to a group of drugs known as antibiotics. In recognition of their monumental contributions, Fleming, Florey, and Chain jointly received the Nobel Prize in Medicine in 1945, many years after the initial discovery."
+  },
+  {
+    "question_id": "R01-Q06",
+    "passage_id": "P1",
+    "type": "multiple_choice",
+    "question": "Who helped stabilize the drug for mass production?",
+    "options": [
+      "A. Howard Florey and Ernst Chain",
+      "B. Albert Einstein",
+      "C. Marie Curie"
+    ],
+    "difficulty": "medium",
+    "passage_text": "The Accidental Discovery of Penicillin\n\nIn 1928, the world of medicine was changed forever by a Scottish researcher named Alexander Fleming. His discovery of the world's first widely effective antibiotic, penicillin, was not the result of a meticulously planned experiment, but rather a stroke of incredible luck. Upon returning from a vacation, Fleming noticed that a petri dish containing staphylococcus bacteria had been left uncovered. A rare strain of mold had grown on the dish, and surrounding the mold was a clear ring where the bacteria had been completely destroyed. This chance observation led to the identification of the mold's antibacterial properties.\n\nDespite his groundbreaking discovery, Fleming struggled to isolate the active substance and produce it in large quantities. The main challenge in the early days of penicillin was stabilizing the drug so it could be mass-produced for medical use. It wasn't until a decade later that two scientists at Oxford University, Howard Florey and Ernst Chain, managed to purify penicillin. Their work successfully stabilized the drug for mass production, fundamentally transforming modern medicine.\n\nThe timing of this breakthrough was historically significant. The mass production of penicillin was crucial during the Second World War, saving countless soldiers from dying of infected wounds. Because of its incredible ability to combat bacterial infections, penicillin belongs to a group of drugs known as antibiotics. In recognition of their monumental contributions, Fleming, Florey, and Chain jointly received the Nobel Prize in Medicine in 1945, many years after the initial discovery."
+  },
+  {
+    "question_id": "R01-Q07",
+    "passage_id": "P1",
+    "type": "sentence_completion",
+    "question": "The mass production of penicillin was crucial during the ________.",
+    "options": [],
+    "difficulty": "medium",
+    "passage_text": "The Accidental Discovery of Penicillin\n\nIn 1928, the world of medicine was changed forever by a Scottish researcher named Alexander Fleming. His discovery of the world's first widely effective antibiotic, penicillin, was not the result of a meticulously planned experiment, but rather a stroke of incredible luck. Upon returning from a vacation, Fleming noticed that a petri dish containing staphylococcus bacteria had been left uncovered. A rare strain of mold had grown on the dish, and surrounding the mold was a clear ring where the bacteria had been completely destroyed. This chance observation led to the identification of the mold's antibacterial properties.\n\nDespite his groundbreaking discovery, Fleming struggled to isolate the active substance and produce it in large quantities. The main challenge in the early days of penicillin was stabilizing the drug so it could be mass-produced for medical use. It wasn't until a decade later that two scientists at Oxford University, Howard Florey and Ernst Chain, managed to purify penicillin. Their work successfully stabilized the drug for mass production, fundamentally transforming modern medicine.\n\nThe timing of this breakthrough was historically significant. The mass production of penicillin was crucial during the Second World War, saving countless soldiers from dying of infected wounds. Because of its incredible ability to combat bacterial infections, penicillin belongs to a group of drugs known as antibiotics. In recognition of their monumental contributions, Fleming, Florey, and Chain jointly received the Nobel Prize in Medicine in 1945, many years after the initial discovery."
+  },
+  {
+    "question_id": "R01-Q08",
+    "passage_id": "P1",
+    "type": "sentence_completion",
+    "question": "Penicillin belongs to a group of drugs known as ________.",
+    "options": [],
+    "difficulty": "medium",
+    "passage_text": "The Accidental Discovery of Penicillin\n\nIn 1928, the world of medicine was changed forever by a Scottish researcher named Alexander Fleming. His discovery of the world's first widely effective antibiotic, penicillin, was not the result of a meticulously planned experiment, but rather a stroke of incredible luck. Upon returning from a vacation, Fleming noticed that a petri dish containing staphylococcus bacteria had been left uncovered. A rare strain of mold had grown on the dish, and surrounding the mold was a clear ring where the bacteria had been completely destroyed. This chance observation led to the identification of the mold's antibacterial properties.\n\nDespite his groundbreaking discovery, Fleming struggled to isolate the active substance and produce it in large quantities. The main challenge in the early days of penicillin was stabilizing the drug so it could be mass-produced for medical use. It wasn't until a decade later that two scientists at Oxford University, Howard Florey and Ernst Chain, managed to purify penicillin. Their work successfully stabilized the drug for mass production, fundamentally transforming modern medicine.\n\nThe timing of this breakthrough was historically significant. The mass production of penicillin was crucial during the Second World War, saving countless soldiers from dying of infected wounds. Because of its incredible ability to combat bacterial infections, penicillin belongs to a group of drugs known as antibiotics. In recognition of their monumental contributions, Fleming, Florey, and Chain jointly received the Nobel Prize in Medicine in 1945, many years after the initial discovery."
+  },
+  {
+    "question_id": "R01-Q09",
+    "passage_id": "P1",
+    "type": "short_answer",
+    "question": "In what year did Fleming discover the mold?",
+    "options": [],
+    "difficulty": "easy",
+    "passage_text": "The Accidental Discovery of Penicillin\n\nIn 1928, the world of medicine was changed forever by a Scottish researcher named Alexander Fleming. His discovery of the world's first widely effective antibiotic, penicillin, was not the result of a meticulously planned experiment, but rather a stroke of incredible luck. Upon returning from a vacation, Fleming noticed that a petri dish containing staphylococcus bacteria had been left uncovered. A rare strain of mold had grown on the dish, and surrounding the mold was a clear ring where the bacteria had been completely destroyed. This chance observation led to the identification of the mold's antibacterial properties.\n\nDespite his groundbreaking discovery, Fleming struggled to isolate the active substance and produce it in large quantities. The main challenge in the early days of penicillin was stabilizing the drug so it could be mass-produced for medical use. It wasn't until a decade later that two scientists at Oxford University, Howard Florey and Ernst Chain, managed to purify penicillin. Their work successfully stabilized the drug for mass production, fundamentally transforming modern medicine.\n\nThe timing of this breakthrough was historically significant. The mass production of penicillin was crucial during the Second World War, saving countless soldiers from dying of infected wounds. Because of its incredible ability to combat bacterial infections, penicillin belongs to a group of drugs known as antibiotics. In recognition of their monumental contributions, Fleming, Florey, and Chain jointly received the Nobel Prize in Medicine in 1945, many years after the initial discovery."
+  },
+  {
+    "question_id": "R01-Q10",
+    "passage_id": "P1",
+    "type": "short_answer",
+    "question": "What type of bacteria was destroyed by the mold?",
+    "options": [],
+    "difficulty": "medium",
+    "passage_text": "The Accidental Discovery of Penicillin\n\nIn 1928, the world of medicine was changed forever by a Scottish researcher named Alexander Fleming. His discovery of the world's first widely effective antibiotic, penicillin, was not the result of a meticulously planned experiment, but rather a stroke of incredible luck. Upon returning from a vacation, Fleming noticed that a petri dish containing staphylococcus bacteria had been left uncovered. A rare strain of mold had grown on the dish, and surrounding the mold was a clear ring where the bacteria had been completely destroyed. This chance observation led to the identification of the mold's antibacterial properties.\n\nDespite his groundbreaking discovery, Fleming struggled to isolate the active substance and produce it in large quantities. The main challenge in the early days of penicillin was stabilizing the drug so it could be mass-produced for medical use. It wasn't until a decade later that two scientists at Oxford University, Howard Florey and Ernst Chain, managed to purify penicillin. Their work successfully stabilized the drug for mass production, fundamentally transforming modern medicine.\n\nThe timing of this breakthrough was historically significant. The mass production of penicillin was crucial during the Second World War, saving countless soldiers from dying of infected wounds. Because of its incredible ability to combat bacterial infections, penicillin belongs to a group of drugs known as antibiotics. In recognition of their monumental contributions, Fleming, Florey, and Chain jointly received the Nobel Prize in Medicine in 1945, many years after the initial discovery."
+  },
+  {
+    "question_id": "R02-Q11",
+    "passage_id": "P2",
+    "type": "matching_headings",
+    "question": "Choose the correct heading for Paragraph A",
+    "options": [
+      "i. The origin of deep-sea exploration",
+      "ii. A surprising discovery",
+      "iii. Technical limitations"
+    ],
+    "difficulty": "hard",
+    "passage_text": "Mysteries of the Deep: Hydrothermal Vents\n\nA. For decades, scientists believed that all life on Earth ultimately depended on the sun. However, this paradigm shifted dramatically in 1977 when researchers exploring the ocean floor discovered hydrothermal vents. These deep-sea geysers are primarily found near tectonic plate boundaries, such as mid-ocean ridges, where tectonic plates diverge. Here, seawater seeps into the Earth's crust, becomes superheated by magma, and is expelled back into the ocean laden with dissolved minerals. The extreme pressure at the ocean floor requires specialized submersibles to safely transport human researchers to these depths.\n\nB. The environments surrounding these vents are completely devoid of sunlight, yet they are teeming with life. The organisms living near vents rely on a process called chemosynthesis. Unlike surface life, these organisms do not require sunlight. Instead, bacteria convert toxic chemicals into energy, serving as the base of the food web. For example, the towering vent structures known as 'black smokers' constantly spew dark, mineral-rich fluid. The primary chemical expelled by the black smokers is hydrogen sulfide, which the specialized bacteria metabolize to survive and feed larger creatures like giant tube worms and blind shrimp.\n\nC. The discovery of these ecosystems has profound implications for evolutionary biology. Because these organisms thrive in such extreme conditions, some researchers believe that life on Earth may have originated near hydrothermal vents. Furthermore, this opens up the possibility that similar chemosynthetic life could exist in the subsurface oceans of icy moons like Jupiter's Europa or Saturn's Enceladus, fundamentally expanding our search for extraterrestrial life."
+  },
+  {
+    "question_id": "R02-Q12",
+    "passage_id": "P2",
+    "type": "matching_headings",
+    "question": "Choose the correct heading for Paragraph B",
+    "options": [
+      "i. The origin of deep-sea exploration",
+      "ii. A surprising discovery",
+      "iii. Technical limitations"
+    ],
+    "difficulty": "hard",
+    "passage_text": "Mysteries of the Deep: Hydrothermal Vents\n\nA. For decades, scientists believed that all life on Earth ultimately depended on the sun. However, this paradigm shifted dramatically in 1977 when researchers exploring the ocean floor discovered hydrothermal vents. These deep-sea geysers are primarily found near tectonic plate boundaries, such as mid-ocean ridges, where tectonic plates diverge. Here, seawater seeps into the Earth's crust, becomes superheated by magma, and is expelled back into the ocean laden with dissolved minerals. The extreme pressure at the ocean floor requires specialized submersibles to safely transport human researchers to these depths.\n\nB. The environments surrounding these vents are completely devoid of sunlight, yet they are teeming with life. The organisms living near vents rely on a process called chemosynthesis. Unlike surface life, these organisms do not require sunlight. Instead, bacteria convert toxic chemicals into energy, serving as the base of the food web. For example, the towering vent structures known as 'black smokers' constantly spew dark, mineral-rich fluid. The primary chemical expelled by the black smokers is hydrogen sulfide, which the specialized bacteria metabolize to survive and feed larger creatures like giant tube worms and blind shrimp.\n\nC. The discovery of these ecosystems has profound implications for evolutionary biology. Because these organisms thrive in such extreme conditions, some researchers believe that life on Earth may have originated near hydrothermal vents. Furthermore, this opens up the possibility that similar chemosynthetic life could exist in the subsurface oceans of icy moons like Jupiter's Europa or Saturn's Enceladus, fundamentally expanding our search for extraterrestrial life."
+  },
+  {
+    "question_id": "R02-Q13",
+    "passage_id": "P2",
+    "type": "matching_headings",
+    "question": "Choose the correct heading for Paragraph C",
+    "options": [
+      "i. The origin of deep-sea exploration",
+      "ii. A surprising discovery",
+      "iii. Technical limitations"
+    ],
+    "difficulty": "hard",
+    "passage_text": "Mysteries of the Deep: Hydrothermal Vents\n\nA. For decades, scientists believed that all life on Earth ultimately depended on the sun. However, this paradigm shifted dramatically in 1977 when researchers exploring the ocean floor discovered hydrothermal vents. These deep-sea geysers are primarily found near tectonic plate boundaries, such as mid-ocean ridges, where tectonic plates diverge. Here, seawater seeps into the Earth's crust, becomes superheated by magma, and is expelled back into the ocean laden with dissolved minerals. The extreme pressure at the ocean floor requires specialized submersibles to safely transport human researchers to these depths.\n\nB. The environments surrounding these vents are completely devoid of sunlight, yet they are teeming with life. The organisms living near vents rely on a process called chemosynthesis. Unlike surface life, these organisms do not require sunlight. Instead, bacteria convert toxic chemicals into energy, serving as the base of the food web. For example, the towering vent structures known as 'black smokers' constantly spew dark, mineral-rich fluid. The primary chemical expelled by the black smokers is hydrogen sulfide, which the specialized bacteria metabolize to survive and feed larger creatures like giant tube worms and blind shrimp.\n\nC. The discovery of these ecosystems has profound implications for evolutionary biology. Because these organisms thrive in such extreme conditions, some researchers believe that life on Earth may have originated near hydrothermal vents. Furthermore, this opens up the possibility that similar chemosynthetic life could exist in the subsurface oceans of icy moons like Jupiter's Europa or Saturn's Enceladus, fundamentally expanding our search for extraterrestrial life."
+  },
+  {
+    "question_id": "R02-Q14",
+    "passage_id": "P2",
+    "type": "multiple_choice",
+    "question": "Hydrothermal vents are primarily found near:",
+    "options": [
+      "A. Tectonic plate boundaries",
+      "B. Continental shelves",
+      "C. Coral reefs"
+    ],
+    "difficulty": "medium",
+    "passage_text": "Mysteries of the Deep: Hydrothermal Vents\n\nA. For decades, scientists believed that all life on Earth ultimately depended on the sun. However, this paradigm shifted dramatically in 1977 when researchers exploring the ocean floor discovered hydrothermal vents. These deep-sea geysers are primarily found near tectonic plate boundaries, such as mid-ocean ridges, where tectonic plates diverge. Here, seawater seeps into the Earth's crust, becomes superheated by magma, and is expelled back into the ocean laden with dissolved minerals. The extreme pressure at the ocean floor requires specialized submersibles to safely transport human researchers to these depths.\n\nB. The environments surrounding these vents are completely devoid of sunlight, yet they are teeming with life. The organisms living near vents rely on a process called chemosynthesis. Unlike surface life, these organisms do not require sunlight. Instead, bacteria convert toxic chemicals into energy, serving as the base of the food web. For example, the towering vent structures known as 'black smokers' constantly spew dark, mineral-rich fluid. The primary chemical expelled by the black smokers is hydrogen sulfide, which the specialized bacteria metabolize to survive and feed larger creatures like giant tube worms and blind shrimp.\n\nC. The discovery of these ecosystems has profound implications for evolutionary biology. Because these organisms thrive in such extreme conditions, some researchers believe that life on Earth may have originated near hydrothermal vents. Furthermore, this opens up the possibility that similar chemosynthetic life could exist in the subsurface oceans of icy moons like Jupiter's Europa or Saturn's Enceladus, fundamentally expanding our search for extraterrestrial life."
+  },
+  {
+    "question_id": "R02-Q15",
+    "passage_id": "P2",
+    "type": "multiple_choice",
+    "question": "The organisms living near vents rely on:",
+    "options": [
+      "A. Photosynthesis",
+      "B. Chemosynthesis",
+      "C. Geothermal radiation"
+    ],
+    "difficulty": "hard",
+    "passage_text": "Mysteries of the Deep: Hydrothermal Vents\n\nA. For decades, scientists believed that all life on Earth ultimately depended on the sun. However, this paradigm shifted dramatically in 1977 when researchers exploring the ocean floor discovered hydrothermal vents. These deep-sea geysers are primarily found near tectonic plate boundaries, such as mid-ocean ridges, where tectonic plates diverge. Here, seawater seeps into the Earth's crust, becomes superheated by magma, and is expelled back into the ocean laden with dissolved minerals. The extreme pressure at the ocean floor requires specialized submersibles to safely transport human researchers to these depths.\n\nB. The environments surrounding these vents are completely devoid of sunlight, yet they are teeming with life. The organisms living near vents rely on a process called chemosynthesis. Unlike surface life, these organisms do not require sunlight. Instead, bacteria convert toxic chemicals into energy, serving as the base of the food web. For example, the towering vent structures known as 'black smokers' constantly spew dark, mineral-rich fluid. The primary chemical expelled by the black smokers is hydrogen sulfide, which the specialized bacteria metabolize to survive and feed larger creatures like giant tube worms and blind shrimp.\n\nC. The discovery of these ecosystems has profound implications for evolutionary biology. Because these organisms thrive in such extreme conditions, some researchers believe that life on Earth may have originated near hydrothermal vents. Furthermore, this opens up the possibility that similar chemosynthetic life could exist in the subsurface oceans of icy moons like Jupiter's Europa or Saturn's Enceladus, fundamentally expanding our search for extraterrestrial life."
+  },
+  {
+    "question_id": "R02-Q16",
+    "passage_id": "P2",
+    "type": "sentence_completion",
+    "question": "The extreme pressure at the ocean floor requires specialized ________ for submarines.",
+    "options": [],
+    "difficulty": "hard",
+    "passage_text": "Mysteries of the Deep: Hydrothermal Vents\n\nA. For decades, scientists believed that all life on Earth ultimately depended on the sun. However, this paradigm shifted dramatically in 1977 when researchers exploring the ocean floor discovered hydrothermal vents. These deep-sea geysers are primarily found near tectonic plate boundaries, such as mid-ocean ridges, where tectonic plates diverge. Here, seawater seeps into the Earth's crust, becomes superheated by magma, and is expelled back into the ocean laden with dissolved minerals. The extreme pressure at the ocean floor requires specialized submersibles to safely transport human researchers to these depths.\n\nB. The environments surrounding these vents are completely devoid of sunlight, yet they are teeming with life. The organisms living near vents rely on a process called chemosynthesis. Unlike surface life, these organisms do not require sunlight. Instead, bacteria convert toxic chemicals into energy, serving as the base of the food web. For example, the towering vent structures known as 'black smokers' constantly spew dark, mineral-rich fluid. The primary chemical expelled by the black smokers is hydrogen sulfide, which the specialized bacteria metabolize to survive and feed larger creatures like giant tube worms and blind shrimp.\n\nC. The discovery of these ecosystems has profound implications for evolutionary biology. Because these organisms thrive in such extreme conditions, some researchers believe that life on Earth may have originated near hydrothermal vents. Furthermore, this opens up the possibility that similar chemosynthetic life could exist in the subsurface oceans of icy moons like Jupiter's Europa or Saturn's Enceladus, fundamentally expanding our search for extraterrestrial life."
+  },
+  {
+    "question_id": "R02-Q17",
+    "passage_id": "P2",
+    "type": "sentence_completion",
+    "question": "Some researchers believe that life on Earth may have originated near ________.",
+    "options": [],
+    "difficulty": "hard",
+    "passage_text": "Mysteries of the Deep: Hydrothermal Vents\n\nA. For decades, scientists believed that all life on Earth ultimately depended on the sun. However, this paradigm shifted dramatically in 1977 when researchers exploring the ocean floor discovered hydrothermal vents. These deep-sea geysers are primarily found near tectonic plate boundaries, such as mid-ocean ridges, where tectonic plates diverge. Here, seawater seeps into the Earth's crust, becomes superheated by magma, and is expelled back into the ocean laden with dissolved minerals. The extreme pressure at the ocean floor requires specialized submersibles to safely transport human researchers to these depths.\n\nB. The environments surrounding these vents are completely devoid of sunlight, yet they are teeming with life. The organisms living near vents rely on a process called chemosynthesis. Unlike surface life, these organisms do not require sunlight. Instead, bacteria convert toxic chemicals into energy, serving as the base of the food web. For example, the towering vent structures known as 'black smokers' constantly spew dark, mineral-rich fluid. The primary chemical expelled by the black smokers is hydrogen sulfide, which the specialized bacteria metabolize to survive and feed larger creatures like giant tube worms and blind shrimp.\n\nC. The discovery of these ecosystems has profound implications for evolutionary biology. Because these organisms thrive in such extreme conditions, some researchers believe that life on Earth may have originated near hydrothermal vents. Furthermore, this opens up the possibility that similar chemosynthetic life could exist in the subsurface oceans of icy moons like Jupiter's Europa or Saturn's Enceladus, fundamentally expanding our search for extraterrestrial life."
+  },
+  {
+    "question_id": "R02-Q18",
+    "passage_id": "P2",
+    "type": "summary_completion",
+    "question": "Complete the summary: Deep-sea vents expel mineral-rich fluid that supports unique ecosystems. Unlike surface life, these organisms do not require ________.",
+    "options": [],
+    "difficulty": "medium",
+    "passage_text": "Mysteries of the Deep: Hydrothermal Vents\n\nA. For decades, scientists believed that all life on Earth ultimately depended on the sun. However, this paradigm shifted dramatically in 1977 when researchers exploring the ocean floor discovered hydrothermal vents. These deep-sea geysers are primarily found near tectonic plate boundaries, such as mid-ocean ridges, where tectonic plates diverge. Here, seawater seeps into the Earth's crust, becomes superheated by magma, and is expelled back into the ocean laden with dissolved minerals. The extreme pressure at the ocean floor requires specialized submersibles to safely transport human researchers to these depths.\n\nB. The environments surrounding these vents are completely devoid of sunlight, yet they are teeming with life. The organisms living near vents rely on a process called chemosynthesis. Unlike surface life, these organisms do not require sunlight. Instead, bacteria convert toxic chemicals into energy, serving as the base of the food web. For example, the towering vent structures known as 'black smokers' constantly spew dark, mineral-rich fluid. The primary chemical expelled by the black smokers is hydrogen sulfide, which the specialized bacteria metabolize to survive and feed larger creatures like giant tube worms and blind shrimp.\n\nC. The discovery of these ecosystems has profound implications for evolutionary biology. Because these organisms thrive in such extreme conditions, some researchers believe that life on Earth may have originated near hydrothermal vents. Furthermore, this opens up the possibility that similar chemosynthetic life could exist in the subsurface oceans of icy moons like Jupiter's Europa or Saturn's Enceladus, fundamentally expanding our search for extraterrestrial life."
+  },
+  {
+    "question_id": "R02-Q19",
+    "passage_id": "P2",
+    "type": "summary_completion",
+    "question": "Complete the summary: Instead, bacteria convert toxic chemicals into ________, serving as the base of the food web.",
+    "options": [],
+    "difficulty": "hard",
+    "passage_text": "Mysteries of the Deep: Hydrothermal Vents\n\nA. For decades, scientists believed that all life on Earth ultimately depended on the sun. However, this paradigm shifted dramatically in 1977 when researchers exploring the ocean floor discovered hydrothermal vents. These deep-sea geysers are primarily found near tectonic plate boundaries, such as mid-ocean ridges, where tectonic plates diverge. Here, seawater seeps into the Earth's crust, becomes superheated by magma, and is expelled back into the ocean laden with dissolved minerals. The extreme pressure at the ocean floor requires specialized submersibles to safely transport human researchers to these depths.\n\nB. The environments surrounding these vents are completely devoid of sunlight, yet they are teeming with life. The organisms living near vents rely on a process called chemosynthesis. Unlike surface life, these organisms do not require sunlight. Instead, bacteria convert toxic chemicals into energy, serving as the base of the food web. For example, the towering vent structures known as 'black smokers' constantly spew dark, mineral-rich fluid. The primary chemical expelled by the black smokers is hydrogen sulfide, which the specialized bacteria metabolize to survive and feed larger creatures like giant tube worms and blind shrimp.\n\nC. The discovery of these ecosystems has profound implications for evolutionary biology. Because these organisms thrive in such extreme conditions, some researchers believe that life on Earth may have originated near hydrothermal vents. Furthermore, this opens up the possibility that similar chemosynthetic life could exist in the subsurface oceans of icy moons like Jupiter's Europa or Saturn's Enceladus, fundamentally expanding our search for extraterrestrial life."
+  },
+  {
+    "question_id": "R02-Q20",
+    "passage_id": "P2",
+    "type": "short_answer",
+    "question": "What is the primary chemical expelled by the black smokers?",
+    "options": [],
+    "difficulty": "hard",
+    "passage_text": "Mysteries of the Deep: Hydrothermal Vents\n\nA. For decades, scientists believed that all life on Earth ultimately depended on the sun. However, this paradigm shifted dramatically in 1977 when researchers exploring the ocean floor discovered hydrothermal vents. These deep-sea geysers are primarily found near tectonic plate boundaries, such as mid-ocean ridges, where tectonic plates diverge. Here, seawater seeps into the Earth's crust, becomes superheated by magma, and is expelled back into the ocean laden with dissolved minerals. The extreme pressure at the ocean floor requires specialized submersibles to safely transport human researchers to these depths.\n\nB. The environments surrounding these vents are completely devoid of sunlight, yet they are teeming with life. The organisms living near vents rely on a process called chemosynthesis. Unlike surface life, these organisms do not require sunlight. Instead, bacteria convert toxic chemicals into energy, serving as the base of the food web. For example, the towering vent structures known as 'black smokers' constantly spew dark, mineral-rich fluid. The primary chemical expelled by the black smokers is hydrogen sulfide, which the specialized bacteria metabolize to survive and feed larger creatures like giant tube worms and blind shrimp.\n\nC. The discovery of these ecosystems has profound implications for evolutionary biology. Because these organisms thrive in such extreme conditions, some researchers believe that life on Earth may have originated near hydrothermal vents. Furthermore, this opens up the possibility that similar chemosynthetic life could exist in the subsurface oceans of icy moons like Jupiter's Europa or Saturn's Enceladus, fundamentally expanding our search for extraterrestrial life."
+  }
+]

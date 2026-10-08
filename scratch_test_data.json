@@ -1,0 +1,535 @@
+{
+  "test": {
+    "test_id": "TEST001",
+    "title": "IELTS Custom Mock Test 001",
+    "type": "IELTS_CUSTOM_MOCK",
+    "duration_minutes": 90,
+    "sections": {
+      "listening": {
+        "duration": 20,
+        "num_questions": 20
+      },
+      "reading": {
+        "duration": 30,
+        "num_questions": 20
+      },
+      "writing": {
+        "duration": 25,
+        "num_tasks": 2
+      },
+      "speaking": {
+        "duration": 15,
+        "num_parts": 3
+      }
+    },
+    "metadata": {
+      "created_at": "2026-10-06T10:57:20.444Z",
+      "version": "1.0"
+    }
+  },
+  "listening": [
+    {
+      "question_id": "L01-Q01",
+      "section": "listening",
+      "part": 1,
+      "type": "note_completion",
+      "question": "Name of the booking agent:",
+      "options": [],
+      "difficulty": "easy"
+    },
+    {
+      "question_id": "L01-Q02",
+      "section": "listening",
+      "part": 1,
+      "type": "note_completion",
+      "question": "Contact number:",
+      "options": [],
+      "difficulty": "easy"
+    },
+    {
+      "question_id": "L01-Q03",
+      "section": "listening",
+      "part": 1,
+      "type": "note_completion",
+      "question": "Date of arrival:",
+      "options": [],
+      "difficulty": "easy"
+    },
+    {
+      "question_id": "L01-Q04",
+      "section": "listening",
+      "part": 1,
+      "type": "multiple_choice",
+      "question": "What accommodation did they choose?",
+      "options": [
+        "A. Standard Room",
+        "B. Ocean View Suite",
+        "C. Private Cabin"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "question_id": "L01-Q05",
+      "section": "listening",
+      "part": 1,
+      "type": "multiple_choice",
+      "question": "The main reason for the trip is:",
+      "options": [
+        "A. Business",
+        "B. Anniversary",
+        "C. Medical"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "question_id": "L02-Q06",
+      "section": "listening",
+      "part": 2,
+      "type": "matching",
+      "question": "Match the facility to its location: Swimming Pool",
+      "options": [
+        "A. North Wing",
+        "B. South Wing",
+        "C. Main Building"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "question_id": "L02-Q07",
+      "section": "listening",
+      "part": 2,
+      "type": "matching",
+      "question": "Match the facility to its location: Gymnasium",
+      "options": [
+        "A. North Wing",
+        "B. South Wing",
+        "C. Main Building"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "question_id": "L02-Q08",
+      "section": "listening",
+      "part": 2,
+      "type": "matching",
+      "question": "Match the facility to its location: Spa Center",
+      "options": [
+        "A. North Wing",
+        "B. South Wing",
+        "C. Main Building"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "question_id": "L02-Q09",
+      "section": "listening",
+      "part": 2,
+      "type": "short_answer",
+      "question": "What time does the breakfast buffet close?",
+      "options": [],
+      "difficulty": "medium"
+    },
+    {
+      "question_id": "L02-Q10",
+      "section": "listening",
+      "part": 2,
+      "type": "short_answer",
+      "question": "What must guests wear in the dining hall?",
+      "options": [],
+      "difficulty": "medium"
+    },
+    {
+      "question_id": "L03-Q11",
+      "section": "listening",
+      "part": 3,
+      "type": "multiple_choice",
+      "question": "Why did John struggle with the assignment?",
+      "options": [
+        "A. Lack of resources",
+        "B. Time constraints",
+        "C. Misunderstood the prompt"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "question_id": "L03-Q12",
+      "section": "listening",
+      "part": 3,
+      "type": "multiple_choice",
+      "question": "Professor Smith suggests that John should:",
+      "options": [
+        "A. Rewrite the introduction",
+        "B. Change his topic entirely",
+        "C. Interview more participants"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "question_id": "L03-Q13",
+      "section": "listening",
+      "part": 3,
+      "type": "sentence_completion",
+      "question": "The primary focus of the research is on marine ________.",
+      "options": [],
+      "difficulty": "hard"
+    },
+    {
+      "question_id": "L03-Q14",
+      "section": "listening",
+      "part": 3,
+      "type": "sentence_completion",
+      "question": "Data was collected over a period of ________ months.",
+      "options": [],
+      "difficulty": "hard"
+    },
+    {
+      "question_id": "L03-Q15",
+      "section": "listening",
+      "part": 3,
+      "type": "sentence_completion",
+      "question": "The findings contradict previous theories regarding ________ patterns.",
+      "options": [],
+      "difficulty": "hard"
+    },
+    {
+      "question_id": "L04-Q16",
+      "section": "listening",
+      "part": 4,
+      "type": "note_completion",
+      "question": "Early bridges were constructed primarily from wood and ________.",
+      "options": [],
+      "difficulty": "hard"
+    },
+    {
+      "question_id": "L04-Q17",
+      "section": "listening",
+      "part": 4,
+      "type": "note_completion",
+      "question": "The introduction of ________ revolutionized structural engineering.",
+      "options": [],
+      "difficulty": "hard"
+    },
+    {
+      "question_id": "L04-Q18",
+      "section": "listening",
+      "part": 4,
+      "type": "note_completion",
+      "question": "Engineers had to account for strong ________ in coastal areas.",
+      "options": [],
+      "difficulty": "hard"
+    },
+    {
+      "question_id": "L04-Q19",
+      "section": "listening",
+      "part": 4,
+      "type": "note_completion",
+      "question": "Maintenance costs were reduced by applying a special ________.",
+      "options": [],
+      "difficulty": "hard"
+    },
+    {
+      "question_id": "L04-Q20",
+      "section": "listening",
+      "part": 4,
+      "type": "multiple_choice",
+      "question": "The lecture concludes that future bridges will heavily rely on:",
+      "options": [
+        "A. Carbon fiber",
+        "B. Smart sensors",
+        "C. Traditional steel"
+      ],
+      "difficulty": "hard"
+    }
+  ],
+  "reading": [
+    {
+      "question_id": "R01-Q01",
+      "passage_id": "P1",
+      "type": "true_false_not_given",
+      "question": "The discovery of penicillin was entirely planned.",
+      "options": [
+        "True",
+        "False",
+        "Not Given"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "question_id": "R01-Q02",
+      "passage_id": "P1",
+      "type": "true_false_not_given",
+      "question": "Alexander Fleming was the first to mass-produce the antibiotic.",
+      "options": [
+        "True",
+        "False",
+        "Not Given"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "question_id": "R01-Q03",
+      "passage_id": "P1",
+      "type": "true_false_not_given",
+      "question": "The mold was found growing on a petri dish of staphylococcus.",
+      "options": [
+        "True",
+        "False",
+        "Not Given"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "question_id": "R01-Q04",
+      "passage_id": "P1",
+      "type": "true_false_not_given",
+      "question": "Fleming received the Nobel Prize immediately after his discovery.",
+      "options": [
+        "True",
+        "False",
+        "Not Given"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "question_id": "R01-Q05",
+      "passage_id": "P1",
+      "type": "multiple_choice",
+      "question": "What was the main challenge in the early days of penicillin?",
+      "options": [
+        "A. It was toxic to humans",
+        "B. It was unstable and hard to purify",
+        "C. Doctors refused to use it"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "question_id": "R01-Q06",
+      "passage_id": "P1",
+      "type": "multiple_choice",
+      "question": "Who helped stabilize the drug for mass production?",
+      "options": [
+        "A. Howard Florey and Ernst Chain",
+        "B. Albert Einstein",
+        "C. Marie Curie"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "question_id": "R01-Q07",
+      "passage_id": "P1",
+      "type": "sentence_completion",
+      "question": "The mass production of penicillin was crucial during the ________.",
+      "options": [],
+      "difficulty": "medium"
+    },
+    {
+      "question_id": "R01-Q08",
+      "passage_id": "P1",
+      "type": "sentence_completion",
+      "question": "Penicillin belongs to a group of drugs known as ________.",
+      "options": [],
+      "difficulty": "medium"
+    },
+    {
+      "question_id": "R01-Q09",
+      "passage_id": "P1",
+      "type": "short_answer",
+      "question": "In what year did Fleming discover the mold?",
+      "options": [],
+      "difficulty": "easy"
+    },
+    {
+      "question_id": "R01-Q10",
+      "passage_id": "P1",
+      "type": "short_answer",
+      "question": "What type of bacteria was destroyed by the mold?",
+      "options": [],
+      "difficulty": "medium"
+    },
+    {
+      "question_id": "R02-Q11",
+      "passage_id": "P2",
+      "type": "matching_headings",
+      "question": "Choose the correct heading for Paragraph A",
+      "options": [
+        "i. The origin of deep-sea exploration",
+        "ii. A surprising discovery",
+        "iii. Technical limitations"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "question_id": "R02-Q12",
+      "passage_id": "P2",
+      "type": "matching_headings",
+      "question": "Choose the correct heading for Paragraph B",
+      "options": [
+        "i. The origin of deep-sea exploration",
+        "ii. A surprising discovery",
+        "iii. Technical limitations"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "question_id": "R02-Q13",
+      "passage_id": "P2",
+      "type": "matching_headings",
+      "question": "Choose the correct heading for Paragraph C",
+      "options": [
+        "i. The origin of deep-sea exploration",
+        "ii. A surprising discovery",
+        "iii. Technical limitations"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "question_id": "R02-Q14",
+      "passage_id": "P2",
+      "type": "multiple_choice",
+      "question": "Hydrothermal vents are primarily found near:",
+      "options": [
+        "A. Tectonic plate boundaries",
+        "B. Continental shelves",
+        "C. Coral reefs"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "question_id": "R02-Q15",
+      "passage_id": "P2",
+      "type": "multiple_choice",
+      "question": "The organisms living near vents rely on:",
+      "options": [
+        "A. Photosynthesis",
+        "B. Chemosynthesis",
+        "C. Geothermal radiation"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "question_id": "R02-Q16",
+      "passage_id": "P2",
+      "type": "sentence_completion",
+      "question": "The extreme pressure at the ocean floor requires specialized ________ for submarines.",
+      "options": [],
+      "difficulty": "hard"
+    },
+    {
+      "question_id": "R02-Q17",
+      "passage_id": "P2",
+      "type": "sentence_completion",
+      "question": "Some researchers believe that life on Earth may have originated near ________.",
+      "options": [],
+      "difficulty": "hard"
+    },
+    {
+      "question_id": "R02-Q18",
+      "passage_id": "P2",
+      "type": "summary_completion",
+      "question": "Complete the summary: Deep-sea vents expel mineral-rich fluid that supports unique ecosystems. Unlike surface life, these organisms do not require ________.",
+      "options": [],
+      "difficulty": "medium"
+    },
+    {
+      "question_id": "R02-Q19",
+      "passage_id": "P2",
+      "type": "summary_completion",
+      "question": "Complete the summary: Instead, bacteria convert toxic chemicals into ________, serving as the base of the food web.",
+      "options": [],
+      "difficulty": "hard"
+    },
+    {
+      "question_id": "R02-Q20",
+      "passage_id": "P2",
+      "type": "short_answer",
+      "question": "What is the primary chemical expelled by the black smokers?",
+      "options": [],
+      "difficulty": "hard"
+    }
+  ],
+  "writing": [
+    {
+      "task_id": "W-TASK1",
+      "task_type": "Academic Task 1",
+      "question": "The chart below shows the percentage of households with various digital devices in a European country between 2000 and 2020. Summarize the information by selecting and reporting the main features, and make comparisons where relevant.",
+      "instructions": "Write at least 150 words. Spend about 10 minutes on this task.",
+      "minimum_words": 150,
+      "sample_high_band_response": "The bar chart illustrates the proportion of households in a specific European nation owning four distinct types of digital technology from 2000 to 2020. Overall, it is evident that the ownership of smartphones and tablets experienced a dramatic surge, whereas desktop computers saw a consistent decline. In 2000, desktop computers were the most prominent device, present in 65% of homes, compared to a mere 15% for smartphones. Over the following two decades, desktop computer ownership dropped steadily, hitting a low of 30% by 2020. Conversely, smartphone prevalence skyrocketed, overtaking desktops in 2010 and reaching a peak of 95% by 2020. Tablets, which were non-existent in the 2000 data, emerged around 2010 at 10% and grew rapidly to 60% by the end of the period. Laptops showed a moderate and steady increase, starting at 20% and stabilizing at approximately 75% in 2020.",
+      "common_mistakes": [
+        "Failing to provide an overall summary.",
+        "Listing data without comparing trends.",
+        "Writing under 150 words."
+      ]
+    },
+    {
+      "task_id": "W-TASK2",
+      "task_type": "Academic Task 2",
+      "question": "Some people believe that university education should be free for everyone. Others think that students should pay for their higher education. Discuss both these views and give your own opinion.",
+      "instructions": "Write at least 250 words. Spend about 15 minutes on this task.",
+      "minimum_words": 250,
+      "sample_high_band_response": "The debate over whether higher education should be universally free or funded by students themselves is highly contentious. While some argue that free university education promotes equality and societal advancement, others contend that tuition fees are necessary to maintain educational standards and economic stability. In my opinion, a subsidized system that shares the cost between the government and students is the most sustainable approach. Proponents of free education argue that it eliminates financial barriers, allowing talented individuals from low-income backgrounds to pursue advanced degrees. This inclusive approach theoretically leads to a more highly skilled workforce, ultimately benefiting the nation's economy and reducing poverty. For example, Scandinavian countries provide free tertiary education, resulting in high levels of social mobility and innovation. Conversely, critics argue that completely free education strains government budgets, leading to higher taxes for all citizens. Furthermore, when universities rely solely on state funding, they may suffer from resource shortages, declining academic standards, and overcrowded facilities. Requiring students to pay tuition instills a sense of responsibility and ensures that educational institutions have the financial capital to invest in cutting-edge research and infrastructure. In conclusion, while free university education champions equal opportunity, it can place an unsustainable burden on public finances. Therefore, a balanced system involving government subsidies, reasonable tuition fees, and accessible student loans provides the best framework for maintaining educational excellence without excluding disadvantaged students.",
+      "common_mistakes": [
+        "Failing to address both sides of the argument.",
+        "Not clearly stating a personal opinion.",
+        "Using informal language."
+      ]
+    }
+  ],
+  "speaking": {
+    "part1": [
+      {
+        "question_id": "S-P1-Q01",
+        "topic": "Work/Studies",
+        "question": "Do you currently work or are you a student?"
+      },
+      {
+        "question_id": "S-P1-Q02",
+        "topic": "Work/Studies",
+        "question": "What do you enjoy most about your studies or job?"
+      },
+      {
+        "question_id": "S-P1-Q03",
+        "topic": "Hometown",
+        "question": "Can you describe your hometown a little?"
+      },
+      {
+        "question_id": "S-P1-Q04",
+        "topic": "Hometown",
+        "question": "Has your hometown changed much since you were a child?"
+      },
+      {
+        "question_id": "S-P1-Q05",
+        "topic": "Free Time",
+        "question": "What do you usually do in your free time?"
+      }
+    ],
+    "part2": {
+      "question_id": "S-P2",
+      "topic": "A Memorable Journey",
+      "question": "Describe a memorable journey you have taken.\nYou should say:\n- Where you went\n- How you traveled\n- Who you went with\nAnd explain why this journey was so memorable to you.",
+      "instructions": "You have 1 minute to prepare. You must speak for 1 to 2 minutes."
+    },
+    "part3": [
+      {
+        "question_id": "S-P3-Q01",
+        "topic": "Travel & Society",
+        "question": "Why do you think people travel more now than they did in the past?"
+      },
+      {
+        "question_id": "S-P3-Q02",
+        "topic": "Travel & Society",
+        "question": "What impacts does tourism have on local communities?"
+      },
+      {
+        "question_id": "S-P3-Q03",
+        "topic": "Travel & Society",
+        "question": "Do you think international travel will change in the future?"
+      },
+      {
+        "question_id": "S-P3-Q04",
+        "topic": "Travel & Society",
+        "question": "Is it better to travel independently or on a guided tour? Why?"
+      }
+    ]
+  }
+}

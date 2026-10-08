@@ -1,0 +1,131 @@
+{
+  "L01-Q01": {
+    "correct": "Thompson",
+    "acceptable": [
+      "thompson"
+    ]
+  },
+  "L01-Q02": {
+    "correct": "9210",
+    "acceptable": [
+      "9210"
+    ]
+  },
+  "L01-Q03": {
+    "correct": "15th",
+    "acceptable": [
+      "15",
+      "15th"
+    ]
+  },
+  "L01-Q04": {
+    "correct": "Ocean",
+    "acceptable": [
+      "ocean"
+    ]
+  },
+  "L01-Q05": {
+    "correct": "B",
+    "acceptable": [
+      "B. Their anniversary",
+      "B",
+      "Their anniversary"
+    ]
+  },
+  "L02-Q06": {
+    "correct": "B. South Wing",
+    "acceptable": [
+      "B"
+    ]
+  },
+  "L02-Q07": {
+    "correct": "A. North Wing",
+    "acceptable": [
+      "A"
+    ]
+  },
+  "L02-Q08": {
+    "correct": "C. Main Building",
+    "acceptable": [
+      "C"
+    ]
+  },
+  "L02-Q09": {
+    "correct": "10:30 AM",
+    "acceptable": [
+      "10:30",
+      "10.30",
+      "half past ten"
+    ]
+  },
+  "L02-Q10": {
+    "correct": "smart casual",
+    "acceptable": [
+      "formal",
+      "smart-casual"
+    ]
+  },
+  "L03-Q11": {
+    "correct": "B. Time constraints",
+    "acceptable": [
+      "B"
+    ]
+  },
+  "L03-Q12": {
+    "correct": "A. Rewrite the introduction",
+    "acceptable": [
+      "A"
+    ]
+  },
+  "L03-Q13": {
+    "correct": "biology",
+    "acceptable": [
+      "life",
+      "ecosystems"
+    ]
+  },
+  "L03-Q14": {
+    "correct": "six",
+    "acceptable": [
+      "6"
+    ]
+  },
+  "L03-Q15": {
+    "correct": "migration",
+    "acceptable": [
+      "migratory"
+    ]
+  },
+  "L04-Q16": {
+    "correct": "stone",
+    "acceptable": [
+      "stones"
+    ]
+  },
+  "L04-Q17": {
+    "correct": "steel",
+    "acceptable": [
+      "iron and steel"
+    ]
+  },
+  "L04-Q18": {
+    "correct": "winds",
+    "acceptable": [
+      "currents",
+      "wind"
+    ]
+  },
+  "L04-Q19": {
+    "correct": "coating",
+    "acceptable": [
+      "paint",
+      "sealant"
+    ]
+  },
+  "L04-Q20": {
+    "correct": "B. Smart sensors",
+    "acceptable": [
+      "B"
+    ]
+  }
+}

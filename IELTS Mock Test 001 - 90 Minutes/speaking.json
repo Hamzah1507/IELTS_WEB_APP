@@ -1,0 +1,57 @@
+{
+  "part1": [
+    {
+      "question_id": "S-P1-Q01",
+      "topic": "Work/Studies",
+      "question": "Do you currently work or are you a student?"
+    },
+    {
+      "question_id": "S-P1-Q02",
+      "topic": "Work/Studies",
+      "question": "What do you enjoy most about your studies or job?"
+    },
+    {
+      "question_id": "S-P1-Q03",
+      "topic": "Hometown",
+      "question": "Can you describe your hometown a little?"
+    },
+    {
+      "question_id": "S-P1-Q04",
+      "topic": "Hometown",
+      "question": "Has your hometown changed much since you were a child?"
+    },
+    {
+      "question_id": "S-P1-Q05",
+      "topic": "Free Time",
+      "question": "What do you usually do in your free time?"
+    }
+  ],
+  "part2": {
+    "question_id": "S-P2",
+    "topic": "A Memorable Journey",
+    "question": "Describe a memorable journey you have taken.\nYou should say:\n- Where you went\n- How you traveled\n- Who you went with\nAnd explain why this journey was so memorable to you.",
+    "instructions": "You have 1 minute to prepare. You must speak for 1 to 2 minutes."
+  },
+  "part3": [
+    {
+      "question_id": "S-P3-Q01",
+      "topic": "Travel & Society",
+      "question": "Why do you think people travel more now than they did in the past?"
+    },
+    {
+      "question_id": "S-P3-Q02",
+      "topic": "Travel & Society",
+      "question": "What impacts does tourism have on local communities?"
+    },
+    {
+      "question_id": "S-P3-Q03",
+      "topic": "Travel & Society",
+      "question": "Do you think international travel will change in the future?"
+    },
+    {
+      "question_id": "S-P3-Q04",
+      "topic": "Travel & Society",
+      "question": "Is it better to travel independently or on a guided tour? Why?"
+    }
+  ]
+}
