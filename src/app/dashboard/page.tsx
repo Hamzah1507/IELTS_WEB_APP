@@ -123,17 +123,11 @@ export default function Dashboard() {
           return;
         }
       } catch (e) {
-        // Network error — fall back to localStorage cache
-        const mockRole = localStorage.getItem('dev_mock_role');
-        const mockName = localStorage.getItem('dev_mock_name');
-        if (mockRole) {
-          setUserRole(mockRole);
-          setAuthChecked(true);
-        } else {
-          router.replace('/');
-          return;
-        }
-        if (mockName) setUserName(mockName);
+        // Enforce strong authentication: any network or session failure clears local state and forces re-login
+        localStorage.removeItem('dev_mock_role');
+        localStorage.removeItem('dev_mock_name');
+        localStorage.removeItem('activeTab');
+        router.replace('/');
       } finally {
         setIsLoading(false);
       }
@@ -751,7 +745,7 @@ export default function Dashboard() {
             </div>
           ) : activeTab === 'Mock Test' ? (
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, width: '100%' }}>
-              <MockTestEngine testId="TEST001" />
+              <MockTestEngine testId="TEST001" onFinish={() => handleTabChange('Dashboard')} />
             </div>
           ) : activeTab === 'Test History' ? (
             <div>
