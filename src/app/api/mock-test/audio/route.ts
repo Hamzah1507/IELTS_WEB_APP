@@ -4,26 +4,19 @@ import path from 'path';
 import { Readable } from 'stream';
 import { drive, getFileIdByName } from '@/lib/google-drive';
 
-// How many bytes of the MP3 head and tail to cache in memory.
-// 256 KB is enough for Chrome to parse MPEG frame headers (head)
-// and ID3v1 tags / VBR headers (tail) to instantly display duration.
-const CACHE_SIZE = 256 * 1024;
-
-interface AudioCacheEntry {
+interface AudioMetadataCacheEntry {
   fileId: string;
   size: number;
   mimeType: string;
-  headBytes: Buffer;
-  tailBytes: Buffer;
   timestamp: number;
 }
 
-const audioCache = new Map<string, AudioCacheEntry>();
+const metadataCache = new Map<string, AudioMetadataCacheEntry>();
 const CACHE_TTL = 1000 * 60 * 60; // 1 hour
-const pendingPopulations = new Map<string, Promise<AudioCacheEntry>>();
+const pendingPopulations = new Map<string, Promise<AudioMetadataCacheEntry>>();
 
-async function getCachedAudioData(cacheKey: string, folderId: string, asset: string): Promise<AudioCacheEntry> {
-  const existing = audioCache.get(cacheKey);
+async function getCachedAudioMetadata(cacheKey: string, folderId: string, asset: string): Promise<AudioMetadataCacheEntry> {
+  const existing = metadataCache.get(cacheKey);
   if (existing && Date.now() - existing.timestamp < CACHE_TTL) {
     return existing;
   }
@@ -31,7 +24,7 @@ async function getCachedAudioData(cacheKey: string, folderId: string, asset: str
   const pending = pendingPopulations.get(cacheKey);
   if (pending) return pending;
 
-  const promise = (async (): Promise<AudioCacheEntry> => {
+  const promise = (async (): Promise<AudioMetadataCacheEntry> => {
     try {
       const fileId = await getFileIdByName(asset, folderId);
       if (!fileId) throw new Error('Asset not found in Drive');
@@ -40,42 +33,10 @@ async function getCachedAudioData(cacheKey: string, folderId: string, asset: str
       const size = parseInt(metaRes.data.size || '0', 10);
       const mimeType = metaRes.data.mimeType || 'audio/mpeg';
 
-      // We need head and tail. If the file is smaller than 2 * CACHE_SIZE, cache the whole thing in head.
-      let headRange = '';
-      let tailRange = '';
-      
-      if (size <= CACHE_SIZE * 2) {
-        headRange = `bytes=0-${size - 1}`;
-        // tail isn't needed
-      } else {
-        headRange = `bytes=0-${CACHE_SIZE - 1}`;
-        tailRange = `bytes=${size - CACHE_SIZE}-${size - 1}`;
-      }
-
-      const fetchDriveRange = async (rangeHeader: string): Promise<Buffer> => {
-        if (!rangeHeader) return Buffer.alloc(0);
-        const res = await drive.files.get(
-          { fileId, alt: 'media' },
-          { responseType: 'stream', headers: { Range: rangeHeader } }
-        );
-        const chunks: Buffer[] = [];
-        const stream = res.data as unknown as Readable;
-        return new Promise((resolve, reject) => {
-          stream.on('data', (c: Buffer) => chunks.push(Buffer.from(c)));
-          stream.on('end', () => resolve(Buffer.concat(chunks)));
-          stream.on('error', reject);
-        });
+      const entry: AudioMetadataCacheEntry = { 
+        fileId, size, mimeType, timestamp: Date.now() 
       };
-
-      const [headBytes, tailBytes] = await Promise.all([
-        fetchDriveRange(headRange),
-        fetchDriveRange(tailRange)
-      ]);
-
-      const entry: AudioCacheEntry = { 
-        fileId, size, mimeType, headBytes, tailBytes, timestamp: Date.now() 
-      };
-      audioCache.set(cacheKey, entry);
+      metadataCache.set(cacheKey, entry);
       return entry;
     } finally {
       pendingPopulations.delete(cacheKey);
@@ -96,8 +57,8 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    if (process.env.NODE_ENV === 'development' && !process.env.GOOGLE_DRIVE_TEST001_FOLDER_ID) {
-      // Fallback for purely local dev without Drive configured
+    if (process.env.NODE_ENV === 'development') {
+      // Local dev always uses the local filesystem directly (0ms latency)
       const folderName = testId === 'TEST001' ? 'IELTS Mock Test 001 - 90 Minutes' : testId;
       const filePath = path.join(/*turbopackIgnore: true*/ process.cwd(), folderName, asset);
 
@@ -129,8 +90,8 @@ export async function GET(request: NextRequest) {
     }
 
     const cacheKey = `${folderId}-${asset}`;
-    const cached = await getCachedAudioData(cacheKey, folderId, asset);
-    const { fileId, size: fileSize, mimeType, headBytes, tailBytes } = cached;
+    const cached = await getCachedAudioMetadata(cacheKey, folderId, asset);
+    const { fileId, size: fileSize, mimeType } = cached;
 
     const range = request.headers.get('range');
     let start = 0;
@@ -152,69 +113,16 @@ export async function GET(request: NextRequest) {
       headers.set('Content-Range', `bytes ${start}-${end}/${fileSize}`);
     }
 
-    // 1. Fully within HEAD cache
-    if (start < headBytes.length && end < headBytes.length) {
-      const slice = headBytes.subarray(start, end + 1);
-      return new NextResponse(slice as any, { status: range ? 206 : 200, headers });
-    }
-
-    // 2. Fully within TAIL cache
-    if (tailBytes.length > 0 && start >= fileSize - tailBytes.length) {
-      const tailOffset = fileSize - tailBytes.length;
-      const sliceStart = start - tailOffset;
-      const sliceEnd = end - tailOffset;
-      const slice = tailBytes.subarray(sliceStart, sliceEnd + 1);
-      return new NextResponse(slice as any, { status: range ? 206 : 200, headers });
-    }
-
-    // 3. Spans HEAD cache and beyond -> serve HEAD instantly, stream rest
-    if (start < headBytes.length) {
-      const cachedPortion = headBytes.subarray(start);
-      const driveStart = headBytes.length;
-
-      let driveStream: Readable | null = null;
-      const abortController = new AbortController();
-
-      const combinedStream = new ReadableStream({
-        start(controller) {
-          controller.enqueue(new Uint8Array(cachedPortion));
-          
-          // Cast signal to any because googleapis types for AxiosRequestConfig might differ slightly
-          drive.files.get(
-            { fileId, alt: 'media' },
-            { responseType: 'stream', headers: { Range: `bytes=${driveStart}-${end}` }, signal: abortController.signal as any }
-          ).then(driveRes => {
-            driveStream = driveRes.data as unknown as Readable;
-            driveStream.on('data', (chunk: Buffer) => {
-              try { controller.enqueue(new Uint8Array(chunk)); } catch { /* ignore */ }
-            });
-            driveStream.on('end', () => {
-              try { controller.close(); } catch { /* ignore */ }
-            });
-            driveStream.on('error', (err) => {
-              try { controller.error(err); } catch { /* ignore */ }
-            });
-          }).catch(err => {
-            if (err.name !== 'AbortError' && err.message !== 'canceled' && !err.message.includes('abort')) {
-              try { controller.error(err); } catch { /* ignore */ }
-            }
-          });
-        },
-        cancel() {
-          abortController.abort();
-          if (driveStream) {
-            driveStream.destroy();
-          }
-        }
-      });
-      return new NextResponse(combinedStream as any, { status: range ? 206 : 200, headers });
-    }
-
-    // 4. In the middle -> stream entirely from Drive
+    // Stream directly from Drive without blocking buffering
     const driveRes = await drive.files.get(
       { fileId, alt: 'media' },
-      { responseType: 'stream', headers: { Range: `bytes=${start}-${end}` } }
+      { 
+        responseType: 'stream', 
+        headers: { Range: `bytes=${start}-${end}` },
+        signal: request.signal as any 
+      }
     );
+
     const webStream = Readable.toWeb(driveRes.data as unknown as Readable);
     return new NextResponse(webStream as any, { status: range ? 206 : 200, headers });
 

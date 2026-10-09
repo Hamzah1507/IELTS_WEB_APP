@@ -2,8 +2,8 @@ import { google } from 'googleapis';
 import fs from 'fs';
 import path from 'path';
 
-const clientEmail = process.env.GOOGLE_CLIENT_EMAIL;
-const privateKey = process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, '\n');
+const clientEmail = process.env.GOOGLE_CLIENT_EMAIL?.trim().replace(/^"|"$/g, '');
+const privateKey = process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, '\n').trim().replace(/^"|"$/g, '');
 
 if (!clientEmail || !privateKey) {
   console.warn("Google Drive credentials not found in environment variables.");
@@ -89,7 +89,7 @@ export async function getMockTestContent(testId: string) {
 
   // Currently assuming TEST001 maps to the folder ID in env.
   // In a real multi-test system, this would lookup the folder ID from Supabase based on testId.
-  const folderId = process.env.GOOGLE_DRIVE_TEST001_FOLDER_ID;
+  const folderId = process.env.GOOGLE_DRIVE_TEST001_FOLDER_ID?.trim().replace(/^"|"$/g, '');
   if (!folderId) throw new Error("Google Drive Folder ID not configured.");
 
   const [testIdStr, listeningId, readingId, writingId, speakingId] = await Promise.all([
@@ -107,6 +107,54 @@ export async function getMockTestContent(testId: string) {
     writingId ? downloadJsonFile(writingId) : null,
     speakingId ? downloadJsonFile(speakingId) : null,
   ]);
+
+  if (!test) {
+    let safeErrorCode = 'TEST_FILE_NOT_FOUND';
+    try {
+      // 1. Try to get the folder itself
+      const folderRes = await drive.files.get({
+        fileId: folderId,
+        fields: 'id, name',
+      });
+      
+      // 2. If folder get succeeds, try listing contents
+      const listRes = await drive.files.list({
+        q: `'${folderId}' in parents and trashed = false`,
+        fields: 'files(id, name)',
+        spaces: 'drive',
+      });
+      const files = listRes.data.files || [];
+      const fileNames = files.map((f: any) => f.name).join(', ');
+      
+      console.error(`[Drive Diagnostics] Folder '${folderRes.data.name}' accessed successfully.`);
+      console.error(`[Drive Diagnostics] Files found in folder: [${fileNames}].`);
+      console.error(`[Drive Diagnostics] 'test.json' was not found among these files.`);
+    } catch (error: any) {
+      const statusCode = error.code || error.status;
+      if (statusCode === 401 || statusCode === 400) {
+        safeErrorCode = 'AUTH_ERROR';
+        console.error(`[Drive Diagnostics] Auth failed (${statusCode}). Message: ${error.message}`);
+      } else if (statusCode === 403) {
+        safeErrorCode = 'PERMISSION_DENIED';
+        console.error(`[Drive Diagnostics] Permission denied (403). Service account lacks viewer access to the folder.`);
+      } else if (statusCode === 404) {
+        safeErrorCode = 'FOLDER_NOT_FOUND';
+        console.error(`[Drive Diagnostics] Folder not found (404). Folder ID may be incorrect or unshared.`);
+      } else {
+        safeErrorCode = 'API_ERROR';
+        console.error(`[Drive Diagnostics] API Error (${statusCode}): ${error.message}`);
+      }
+    }
+
+    return { 
+      test: null, 
+      listening: null, 
+      reading: null, 
+      writing: null, 
+      speaking: null, 
+      _diagnostic_code: safeErrorCode 
+    };
+  }
 
   return { test, listening, reading, writing, speaking };
 }
@@ -134,7 +182,7 @@ export async function getPrivateAnswerKeys(testId: string) {
     };
   }
 
-  const rootFolderId = process.env.GOOGLE_DRIVE_TEST001_FOLDER_ID;
+  const rootFolderId = process.env.GOOGLE_DRIVE_TEST001_FOLDER_ID?.trim().replace(/^"|"$/g, '');
   if (!rootFolderId) throw new Error("Google Drive Folder ID not configured.");
 
   const answerKeysFolderId = await getFileIdByName('Answer Keys', rootFolderId);
