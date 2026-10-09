@@ -1,11 +1,31 @@
 import { google } from 'googleapis';
 import fs from 'fs';
 import path from 'path';
+import crypto from 'crypto';
 
 function formatPrivateKey(key?: string) {
   if (!key) return key;
-  let formatted = key.trim().replace(/^["']|["']$/g, '');
+  let formatted = key.trim();
+
+  // 1. Attempt to parse as JSON first (if user pasted the entire service account JSON file)
+  if (formatted.startsWith('{') && formatted.endsWith('}')) {
+    try {
+      const parsed = JSON.parse(formatted);
+      if (parsed.private_key) {
+        formatted = parsed.private_key;
+      }
+    } catch (e) {
+      // Not valid JSON, proceed with string cleanup
+    }
+  }
+
+  // 2. Remove surrounding quotes (single or double)
+  formatted = formatted.replace(/^["']|["']$/g, '');
+  
+  // 3. Unescape literal \n
   formatted = formatted.replace(/\\n/g, '\n');
+
+  // 4. If there are no newlines, Vercel might have replaced them with spaces.
   if (!formatted.includes('\n')) {
     const b = formatted.match(/-----BEGIN [A-Z ]+-----/);
     const e = formatted.match(/-----END [A-Z ]+-----/);
@@ -25,6 +45,19 @@ const privateKey = formatPrivateKey(process.env.GOOGLE_PRIVATE_KEY);
 
 if (!clientEmail || !privateKey) {
   console.warn("Google Drive credentials not found in environment variables.");
+}
+
+// Validate the key immediately to surface deployment configuration errors clearly
+if (privateKey) {
+  try {
+    crypto.createPrivateKey(privateKey);
+  } catch (error: any) {
+    console.error(`[CRITICAL] GOOGLE_PRIVATE_KEY is corrupted or invalid in Vercel. Error: ${error.message}`);
+    console.error(`The environment variable value could not be parsed as a valid PEM key even after formatting. ` +
+                  `Ensure you have copied the exact 'private_key' field from your Google Service Account JSON file, ` +
+                  `including the '-----BEGIN PRIVATE KEY-----' and '-----END PRIVATE KEY-----' boundaries. ` +
+                  `Do not share the key in chat.`);
+  }
 }
 
 const auth = new google.auth.GoogleAuth({
