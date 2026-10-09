@@ -2,8 +2,26 @@ import { google } from 'googleapis';
 import fs from 'fs';
 import path from 'path';
 
-const clientEmail = process.env.GOOGLE_CLIENT_EMAIL?.trim().replace(/^"|"$/g, '');
-const privateKey = process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, '\n').trim().replace(/^"|"$/g, '');
+function formatPrivateKey(key?: string) {
+  if (!key) return key;
+  let formatted = key.trim().replace(/^["']|["']$/g, '');
+  formatted = formatted.replace(/\\n/g, '\n');
+  if (!formatted.includes('\n')) {
+    const b = formatted.match(/-----BEGIN [A-Z ]+-----/);
+    const e = formatted.match(/-----END [A-Z ]+-----/);
+    if (b && e) {
+      const bStr = b[0];
+      const eStr = e[0];
+      let body = formatted.substring(formatted.indexOf(bStr) + bStr.length, formatted.indexOf(eStr));
+      body = body.replace(/\s+/g, '\n');
+      formatted = `${bStr}\n${body.trim()}\n${eStr}\n`;
+    }
+  }
+  return formatted;
+}
+
+const clientEmail = process.env.GOOGLE_CLIENT_EMAIL?.trim().replace(/^["']|["']$/g, '');
+const privateKey = formatPrivateKey(process.env.GOOGLE_PRIVATE_KEY);
 
 if (!clientEmail || !privateKey) {
   console.warn("Google Drive credentials not found in environment variables.");
